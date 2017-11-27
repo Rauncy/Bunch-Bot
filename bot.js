@@ -1,24 +1,31 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const bot = new Discord.Client();
-const conversions = {
-  "<@&365711698298142720>" : "$ment rainbow",
-  "<@&375512921792315402>" : "$ment pat",
-  "<@&365711698386092034>" : "$ment pubg",
-  "<@&372789922433859585>" : "$ment civ",
-  "<@&375512921792315402>" : "$ment ark"
-};
 
 bot.on('ready', () => {
-  console.log("Bot connected to server");
+  console.log("Bot is now online!");
   //bot.channels.get("375846593204846602", "bot-and-vagene").send("has arrived!");
 });
 
+var itype = false;
+
 bot.on('message', (message) => {
+  let t = message.content;
+  var nWordRegex = /\b(ni)[bg🅱️]+[era]*(s*)\b/gi;
+  if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
+  if(!message.author.bot && t.startsWith("$test")){
+    var nick = message.channel.guild.member(message.author).nickname;
+    if(nick) message.channel.send(`<@${message.author.id}>'s username is ${message.author.username}, but has a nickname: ${nick}`);
+    else message.channel.send(`<@${message.author.id}> has no nickname`);
+  }
+  /*
   let t = message.content.toLowerCase();
   console.log(t);
   if(t.includes("nigga") || t.includes("nibba") || t.includes("nibber")){
     message.channel.send('You mean \"' + t.replace("nigga", "nigger").replace("nibba", "nigger").replace("nibber", "nigger") + "\"?");
+  }
+  if(t.includes("nig nog") || t.includes("nig-nog") || t.includes("nignog")){
+    message.channel.send('You mean \"' + t.replace("nig nog", "eggnog").replace("nig-nog", "eggnog").replace("nignog", "eggnog") + "\"?");
   }
   if(t == "why did colton make the discord?"){
     message.channel.send("Because Colton wanted to make it before William. Fuck you William.");
@@ -26,27 +33,20 @@ bot.on('message', (message) => {
   if(t.includes(":feelsgoodman:")){
     message.channel.send("Nah, <:feelsbadman:372163239037108224><:snowball:368518005493202945>");
   }
-  if((t.includes("<@!182696081220567041>") || t.includes("<@182696081220567041>"))&&!message.author.bot){
-    message.reply("Luca fucks with nobody!");
+  if((t.includes("<@!184030502070517761>") || t.includes("<@184030502070517761>"))&&!message.author.bot){
+    message.reply("Bill fucks with nobody!");
   }
   if((t.includes("<@!317864998728761344>") || t.includes("<@317864998728761344>"))&&!message.author.bot){
     message.reply("Ye?");
+  }if((t.includes("eggs, bacon, grits"))&&!message.author.bot){
+    message.channel.send("SAUSAGE!");
+  }if(t.includes(" bot") || t.includes("bot ") || t.includes(" bot ")){
+    message.reply("Fuck did you say about me?\nSquare up faggot.");
   }
-
-  //Replacments
-  let cases = Object.keys(conversions);
-  cases.forEach( val => {
-    if(t.includes(val)){
-      message.edit(t.replace(new RegExp(val), conversions[val]))
-        .then(msg => {
-          msg.channel.send(conversions[val]);
-          msg.reply("using @game is depreciated because I, <@!317864998728761344>, say so!");
-        }).catch(console.error);
-    }
-  });
 
   //Commands
   if(message.author.id === bot.id || !message.author.bot) processCommand(message);
+  */
 });
 
 function processCommand(message){
@@ -272,7 +272,7 @@ function processCommand(message){
           for(var i=1;i<cmd[1].length;i++){
             ret += " " + cmd[1].charAt(i);
           }
-          ret = ret.replace(/ B /, ":b:");
+          ret = ret.replace(/ B /, " :b: ");
           message.channel.send(ret);
         }else{
           message.channel.send("Memify requires 1 :b:aramater: Text");

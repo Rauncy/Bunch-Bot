@@ -1,0 +1,66 @@
+can string metachars together
+
+\regex\
+new RegExp(regex);
+
+functions
+indexOf
+test
+match
+
+format : position metachar quantifiers ... flag
+
+meta-characters{
+  \d : digit
+  \w : all letters and digits
+  \s : whitespace
+  . : any character
+  \. : literal .
+  \( or \) : literal ( or )
+  \[ or \] : literal [ or ]
+}
+
+quantifiers{
+  * : [0, infinity) (greedy, takes furthest results)
+  *? : [0, infinity) (not greedy, takes closest results)
+  + : [1, infinity)
+  ? : [0, 1]
+  {count} : [count, count]
+  {min, max} : [min, max]
+}
+
+position{
+  ^ : beginning of line
+  $ : end of line
+  \b : word boundary (break of words by any char)
+}
+
+char class{
+  things that appear in []
+  all chars in are literals
+  each char separate
+  special chars{
+    - : through
+    ^ : not (inverse selection almost)
+  }
+}
+
+alternation{
+  deonted with ( | )
+  does an or expression
+}
+
+subgroups{
+  () used to separate subgroups
+  $1 used in replace to refer to subgroups
+  \1 used in regex to refer to subgroups
+  group 0 is everything
+  groups start at 1
+}
+
+flags{
+  /g : global
+  /i : case insensitive
+}
+
+look for [color, colors, colour, colours] : colou?rs?
