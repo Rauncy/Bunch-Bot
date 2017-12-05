@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const bot = new Discord.Client();
+const perms = require('./perms.js');
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
@@ -13,10 +14,51 @@ bot.on('message', (message) => {
   let t = message.content;
   var nWordRegex = /\b(ni)[bg🅱️]+[era]*(s*)\b/gi;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
-  if(!message.author.bot && t.startsWith("$test")){
-    var nick = message.channel.guild.member(message.author).nickname;
-    if(nick) message.channel.send(`<@${message.author.id}>'s username is ${message.author.username}, but has a nickname: ${nick}`);
-    else message.channel.send(`<@${message.author.id}> has no nickname`);
+
+  if(t.startsWith('$perms')){
+    let cmds = t.split(" ");
+    switch(cmds[1]){
+      case "add":
+        if(cmds[2]){
+          //Has perm name
+          if(cmds[3]){
+            //Has perm content
+            var sub = "response";
+            if(cmds[0].startsWith("$")) sub = "commands";
+
+            message.channel.send(`${message.author} ${(perms.hasPermission(message.author, sub, cmds[]))}`);
+
+          }else{
+            message.channel.send(cmd[2] + " requires permission content following the name");
+          }
+        }
+        break;
+      case "save":
+        perms.savePerms(message.channel.guild);
+        break;
+      case "load":
+        perms.loadPerms(message.channel.guild);
+        break;
+      case "test":
+        if(cmds[2]){
+          //Has test condition
+
+          var sub = "response";
+          if(cmds[0].startsWith("$")) sub = "commands";
+          //How directories are being assigned
+
+          if(cmds[3] && /\d{18}/.test(cmds[3])){
+            perms.hasPermission(bot.users.get(cmds[3].match(/\d{18}/)[0]), sub, cmds[0].substring(1), message.guild);
+          }else{
+            perms.hasPermission(message.author, sub, cmds[0].substring(1), message.guid);
+          }
+        }else{
+          //No test condition
+        }
+        break;
+      default:
+        break;
+    }
   }
   /*
   let t = message.content.toLowerCase();
@@ -43,10 +85,16 @@ bot.on('message', (message) => {
   }if(t.includes(" bot") || t.includes("bot ") || t.includes(" bot ")){
     message.reply("Fuck did you say about me?\nSquare up faggot.");
   }
-
-  //Commands
-  if(message.author.id === bot.id || !message.author.bot) processCommand(message);
   */
+  //Commands
+  //if(message.author.id === bot.id || !message.author.bot) processCommand(message);
+
+});
+
+bot.on('messageReactionAdd', (react, user) => {
+  if(react.emoji.id === "372163239037108224"){
+    react.message.react(react.emoji);
+  }
 });
 
 function processCommand(message){
@@ -91,7 +139,7 @@ function processCommand(message){
         break;
 
       case "join":
-        let joinChannel = message.author.channels.get(message.member.voiceChannelID);
+        let joinChannel = message.member.voiceChannel;
         joinChannel.join()
         .then(conn => {
           console.log("Connected");
@@ -99,7 +147,7 @@ function processCommand(message){
         break;
 
       case "leave":
-        let leaveChannel = message.author.channels.get(message.member.voiceChannelID);
+        let leaveChannel = bot.channels.get(message.member.voiceChannelID);
         leaveChannel.leave();
         break;
 
