@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const bot = new Discord.Client();
-const perms = require('./perms.js');
+const perms = require('./interactivity/perm.js');
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
@@ -18,18 +18,27 @@ bot.on('message', (message) => {
   if(t.startsWith('$perms')){
     let cmds = t.split(" ");
     switch(cmds[1]){
-      case "add":
+      case "allow":
         if(cmds[2]){
           //Has perm name
           if(cmds[3]){
             //Has perm content
-            var sub = "response";
-            if(cmds[0].startsWith("$")) sub = "commands";
-
-            message.channel.send(`${message.author} ${(perms.hasPermission(message.author, sub, cmds[]))}`);
+            perms.allow(user.id, perms.definePermission(message.guild, cmds[2]));
 
           }else{
-            message.channel.send(cmd[2] + " requires permission content following the name");
+            message.channel.send(cmd[2] + " requires a user to allow");
+          }
+        }
+        break;
+      case "revoke":
+        if(cmds[2]){
+          //Has perm name
+          if(cmds[3]){
+            //Has perm content
+            perms.disallow(user.id, perms.definePermission(message.guild, cmds[2]));
+
+          }else{
+            message.channel.send(cmd[2] + " requires a user to revoke");
           }
         }
         break;
@@ -42,21 +51,24 @@ bot.on('message', (message) => {
       case "test":
         if(cmds[2]){
           //Has test condition
-
-          var sub = "response";
-          if(cmds[0].startsWith("$")) sub = "commands";
           //How directories are being assigned
 
-          if(cmds[3] && /\d{18}/.test(cmds[3])){
-            perms.hasPermission(bot.users.get(cmds[3].match(/\d{18}/)[0]), sub, cmds[0].substring(1), message.guild);
+          if(cmds[3]){
+            if(/\d{18}/.test(cmds[3])){
+              perms.hasPermission(bot.users.get(cmds[3].match(/\d{18}/)[0]), sub, cmds[0].substring(1), message.guild);
+            }else{
+              message.channel.send("User must be valid");
+            }
           }else{
-            perms.hasPermission(message.author, sub, cmds[0].substring(1), message.guid);
+            perms.hasPermission(message.author, cmds[2], message.guild)
           }
         }else{
           //No test condition
+          message.channel.send("Must contain an indexable permission");
         }
         break;
       default:
+        message.channel.send("Available subcommands: allow, revoke, save, load, test");
         break;
     }
   }

@@ -1,33 +1,32 @@
 "use strict";
 
 const CMD_DELIMITER = "$";
-var prompts = {};
-var commands = {};
+exports.DELIMITER = CMD_DELIMITER;
+
+exports.commands = {};
 
 /*
 Name is the name the command will run under
 Run is the function that will run when executed, paramaters are the message object and space separated array of words after command
 */
 function addCommand(name, run){
-  if(prompts[`${CMD_DELIMITER}${name}`] = commands.length;
-  commands.push(run);
+  if(!exports.commands[name]) exports.commands[name] = (run);
 }
 
 /*
 Message is the message object in which a command is executed
 */
-function runCommand(message){
-  while(){
-
-  }
+exports.runCommand = function(message){
 }
 
-function separateParams(cmd, text){
+exports.separateParams = function(cmd, text){
   if(text.startsWith(CMD_DELIMITER + cmd)){
-
+    //Process params
   }else return undefined;
 }
 
 addCommand("help", message => {
-
+  message.channel.send("The command interface works <@" + message.author + ">");
+});
+addCommand("perms", message => {
 });
