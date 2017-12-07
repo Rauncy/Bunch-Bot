@@ -23,11 +23,13 @@ bot.on('message', (message) => {
           //Has perm name
           if(cmds[3]){
             //Has perm content
-            perms.allow(user.id, perms.definePermission(message.guild, cmds[2]));
+            perms.allow(cmds[2], perms.definePermission(message.guild, cmds[3]));
 
           }else{
-            message.channel.send(cmd[2] + " requires a user to allow");
+            message.channel.send(cmds[2] + " requires a permission to modify");
           }
+        }else{
+          message.channel.send("Allow requires a user to allow");
         }
         break;
       case "revoke":
@@ -35,11 +37,31 @@ bot.on('message', (message) => {
           //Has perm name
           if(cmds[3]){
             //Has perm content
-            perms.disallow(user.id, perms.definePermission(message.guild, cmds[2]));
+            perms.disallow(cmds[2], perms.definePermission(message.guild, cmds[3]));
 
           }else{
-            message.channel.send(cmd[2] + " requires a user to revoke");
+            message.channel.send(cmds[2] + " requires a permission to modify");
           }
+        }else{
+          message.channel.send("Revoke requires a user to revoke");
+        }
+        break;
+      case "remove":
+        if(cmds[2]){
+          //Has perm name
+          if(cmds[3]){
+            //Has perm content
+            if(perms.remove(cmds[2], perms.definePermission(message.guild, cmds[3]))){
+              message.channel.send("Removed successfully");
+            }else{
+              message.channel.send("Removed unsuccessfully");
+            }
+
+          }else{
+            message.channel.send(cmds[2] + " requires a permission to remove");
+          }
+        }else{
+          message.channel.send("Remove requires a user to remove");
         }
         break;
       case "save":
@@ -54,18 +76,26 @@ bot.on('message', (message) => {
           //How directories are being assigned
 
           if(cmds[3]){
-            if(/\d{18}/.test(cmds[3])){
-              perms.hasPermission(bot.users.get(cmds[3].match(/\d{18}/)[0]), sub, cmds[0].substring(1), message.guild);
+            if(/\d{18}/.test(cmds[2])){
+              if(perms.hasPermission(bot.users.get(cmds[2].match(/\d{18}/)[0]), cmds[3], message.guild)){
+                message.channel.send(cmds[2] + " can use this command");
+              }else{
+                message.channel.send(cmds[2] + " can't use this command");
+              }
             }else{
               message.channel.send("User must be valid");
             }
           }else{
-            perms.hasPermission(message.author, cmds[2], message.guild)
+            message.channel.send("Must contain a permission to test");
           }
         }else{
           //No test condition
           message.channel.send("Must contain an indexable permission");
         }
+        break;
+      case "raw":
+        if(cmds[2]) message.channel.send("RAW: " + perms.getRaw(perms.definePerm(message.guild, cmds[2])));
+        else message.channel.send("RAW: " + perms.all(message.guild));
         break;
       default:
         message.channel.send("Available subcommands: allow, revoke, save, load, test");

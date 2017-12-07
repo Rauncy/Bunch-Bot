@@ -21,7 +21,10 @@ exports.loadPerms = function(server){
     if(err){
       perms[server.id]={commands:{}, custcommands:{}, responses:{}, levels:{}};
       perms[server.id].levels[server.owner.id] = 0;
-      console.log("Created new perms for server " + server.id);
+      fs.open(`./interactivity/content/${server.id}/perms.json`, 'w', (err, file) => {
+        if(err) console.error(err);
+        else console.log("Created new perms for server " + server.id);
+      });
       //TODO dm permission tutorial to owner
     }
     else if(!perms[server.id]) perms[server.id] = JSON.parse(data);
@@ -48,9 +51,9 @@ exports.saveAllPerms = function(){
 };
 
 //Permission object
-exports.Permission = function(){
+function Permission(){
   //Lower levels are better, lowest being 0
-  this.level = undefined;
+  this.level = -1;
   //Perms preceded level, level is only viable when there is no data for the user or their role on perms
   this.perms = {roles : [], users : []};
 };
@@ -65,8 +68,8 @@ exports.defineType = function(s){
 
 exports.definePermission = function(server, name){
   let type = exports.defineType(name);
-  if(perms[server.id][type][name]) return perms[server.id][type][name];
-  return null;
+  if(!perms[server.id][type][name]) perms[server.id][type][name] = new Permission();
+  return perms[server.id][type][name];
 };
 
 //TODO add owner override
@@ -82,12 +85,18 @@ exports.hasPermission = function(user, name, server){
     //perm exists
     if(p.users.includes(/[ie]{1}\d{18}/)){
       //user match
-      return p.users[users.indexOf(/[ie]{1}\d{18}/)]=="i"+user.id;
+      console.log("usr");
+      if(p.users[users.indexOf(/[ie]{1}\d{18}/)]=="i"+user.id) return true;
+      else{
+        var roles = server.member(message.author).roles.has(user.id);
+      }
     }else if(p.roles.includes(/[ie]{1}\d{18}/)){
       //role match
+      console.log("rol");
       return p.roles[users.indexOf(/[ie]{1}\d{18}/)]=="i"+user.id;
     }else{
       //use level
+      console.log("lvl");
       if(perms[server.id].levels[user.id]){
         //if has custom levels for roles/users
         if(p.level != -1) return perms[server.id].levels[user.id] <= p.level;
@@ -123,7 +132,7 @@ function permit(id, prefix, perm){
 
 function removePerms(id, arr){
   var regex = new RegExp("[ie]{1}" + id);
-  arr.some((v, i) => {
+  return arr.some((v, i) => {
      if(regex.test(v)){
        arr.splice(i, 1);
        return true;
@@ -159,6 +168,10 @@ exports.getRaw = function(perm){
 exports.setRaw = function(raw, perm){
   perm.perms = JSON.parse(raw);
 };
+
+exports.all = function(server){
+  return JSON.stringify(perms[server.id]);
+}
 
 exports.setLevel = function(level, perm){perm.level = level};
 exports.removeLevel = function(perm){perm.level = undefined};
