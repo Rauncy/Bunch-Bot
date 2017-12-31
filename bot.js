@@ -1,105 +1,159 @@
+"use strict";
 const Discord = require('discord.js');
 const fs = require('fs');
+//const rl = require('readline');
+//const console = rl.createInterface({input: process.stdin, output: process.stdout});
 const bot = new Discord.Client();
+
+//Import custom libraries
 const perms = require('./interactivity/perm.js');
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
-  //bot.channels.get("375846593204846602", "bot-and-vagene").send("has arrived!");
+  console.log(new Date())
 });
 
 var itype = false;
 
 bot.on('message', (message) => {
   let t = message.content;
-  var nWordRegex = /\b(ni)[bg🅱️]+[era]*(s*)\b/gi;
+  if(message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.member.id)){
+
+  }
+  var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
+  var dokiRegex = /([literau]{3,}\s?club|ori|suki|uri|nika|do+k+i+|<@&236665582869676033>)/gi;
+  var thotRegex = /^be+ +go+ne+ +(.+?)ot$/gi;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
-
+  if(!message.author.bot && dokiRegex.test(t)){
+    /*
+    var contents = dokiRegex.exec(t);
+    console.log(contents);
+    for(var i=1;i<contents.length;i++){
+      while(contents.includes(contents[i], contents.indexOf(contents[i]))){
+        contents.splice(contents.indexOf(contents[i], contents.indexOf(contents[i])), 1);
+      }
+    }
+    message.reply(`no ${contents.join(", or ")}. ${(contents.length>1 ? "They're" : "It's")} gay.`);
+    */
+    message.reply("doki doki gay af");
+  }
+  if(/[o0u]+[w]+[o0u]/gi.test(t) && !message.author.bot) message.channel.send("<@&375512928872300544>");
+  if(t.includes("<@&375512928872300544>") && !message.author.bot) message.channel.send("Notices <@&375512928872300544>, OwO whats this?");
+  //if(t.includes(/(i'm|i am) (.+)/ig))
+  if(thotRegex.test(t)) message.reply(message.content.replace(thotRegex, "OUST THE $1OT").toUpperCase());
+  if(/^\$ifEven (\d+)/ig.test(t)){
+    message.channel.send("I can't even, let me try my sources");
+    message.channel.send(".ifEven " + t.match(/^\$ifEven (\d+)/ig)[1]);
+  }
   if(t.startsWith('$perms')){
+    if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
     let cmds = t.split(" ");
-    switch(cmds[1]){
-      case "allow":
-        if(cmds[2]){
-          //Has perm name
-          if(cmds[3]){
-            //Has perm content
-            perms.allow(cmds[2], perms.definePermission(message.guild, cmds[3]));
+    if(cmds[1]){
+      switch(cmds[1]){
+        case "allow":
+          if(cmds[2]){
+            //Has perm name
+            if(cmds[3]){
+              //Has perm content
+              perms.allow(cmds[2], perms.definePermission(message.guild, cmds[3]));
 
-          }else{
-            message.channel.send(cmds[2] + " requires a permission to modify");
-          }
-        }else{
-          message.channel.send("Allow requires a user to allow");
-        }
-        break;
-      case "revoke":
-        if(cmds[2]){
-          //Has perm name
-          if(cmds[3]){
-            //Has perm content
-            perms.disallow(cmds[2], perms.definePermission(message.guild, cmds[3]));
-
-          }else{
-            message.channel.send(cmds[2] + " requires a permission to modify");
-          }
-        }else{
-          message.channel.send("Revoke requires a user to revoke");
-        }
-        break;
-      case "remove":
-        if(cmds[2]){
-          //Has perm name
-          if(cmds[3]){
-            //Has perm content
-            if(perms.remove(cmds[2], perms.definePermission(message.guild, cmds[3]))){
-              message.channel.send("Removed successfully");
             }else{
-              message.channel.send("Removed unsuccessfully");
+              message.channel.send(cmds[2] + " requires a permission to modify");
             }
-
           }else{
-            message.channel.send(cmds[2] + " requires a permission to remove");
+            message.channel.send("Allow requires a user to allow");
           }
-        }else{
-          message.channel.send("Remove requires a user to remove");
-        }
-        break;
-      case "save":
-        perms.savePerms(message.channel.guild);
-        break;
-      case "load":
-        perms.loadPerms(message.channel.guild);
-        break;
-      case "test":
-        if(cmds[2]){
-          //Has test condition
-          //How directories are being assigned
+          break;
+        case "revoke":
+          if(cmds[2]){
+            //Has perm name
+            if(cmds[3]){
+              //Has perm content
+              perms.disallow(cmds[2], perms.definePermission(message.guild, cmds[3]));
 
-          if(cmds[3]){
-            if(/\d{18}/.test(cmds[2])){
-              if(perms.hasPermission(bot.users.get(cmds[2].match(/\d{18}/)[0]), cmds[3], message.guild)){
-                message.channel.send(cmds[2] + " can use this command");
+            }else{
+              message.channel.send(cmds[2] + " requires a permission to modify");
+            }
+          }else{
+            message.channel.send("Revoke requires a user to revoke");
+          }
+          break;
+        case "remove":
+          if(cmds[2]){
+            //Has perm name
+            if(cmds[3]){
+              //Has perm content
+              if(perms.remove(cmds[2], perms.definePermission(message.guild, cmds[3]))){
+                message.channel.send("Removed successfully");
               }else{
-                message.channel.send(cmds[2] + " can't use this command");
+                message.channel.send("Removed unsuccessfully");
+              }
+
+            }else{
+              message.channel.send(cmds[2] + " requires a permission to remove");
+            }
+          }else{
+            message.channel.send("Remove requires a user to remove");
+          }
+          break;
+        case "level":
+          if(cmds[2] && /<@!?\d{18}>/i.test(cmds[2])){
+            if(cmds[3] && parseInt(cmds[3])==cmds[3]){
+              perms.setLevel(message.guild, cmds[2].match(/\d{18}/)[0], parseInt(cmds[3]));
+            }else if(cmds[3] && cmds[3] == "delete"){
+              perms.removeLevel(message.guild, cmds[2].match(/\d{18}/)[0]);
+            }else{
+              message.channel.send(cmds[2] + " requires a level to set");
+            }
+          }else if(cmds[2]){
+            if(cmds[3] && parseInt(cmds[3])==cmds[3]){
+              perms.definePermission(message.guild, cmds[2]).level = cmds[3];
+            }else{
+              message.channel.send(cmds[2] + " requires a level to set");
+            }
+          }else{
+            message.channel.send("Level requires a level to set");
+          }
+          break;
+        case "save":
+          perms.savePerms(message.channel.guild);
+          break;
+        case "all":
+          message.channel.send(perms.all());
+          break;
+        case "test":
+          if(cmds[2]){
+            //Has test condition
+            //How directories are being assigned
+
+            if(cmds[3]){
+              if(/\d{18}/.test(cmds[2])){
+                if(perms.hasPermission(cmds[2], cmds[3], message.guild)){
+                  message.channel.send(cmds[2] + " can use this command");
+                }else{
+                  message.channel.send(cmds[2] + " can't use this command");
+                }
+              }else{
+                message.channel.send("User must be valid");
               }
             }else{
-              message.channel.send("User must be valid");
+              message.channel.send("Must contain a permission to test");
             }
           }else{
-            message.channel.send("Must contain a permission to test");
+            //No test condition
+            message.channel.send("Must contain an indexable permission");
           }
-        }else{
-          //No test condition
-          message.channel.send("Must contain an indexable permission");
-        }
-        break;
-      case "raw":
-        if(cmds[2]) message.channel.send("RAW: " + perms.getRaw(perms.definePerm(message.guild, cmds[2])));
-        else message.channel.send("RAW: " + perms.all(message.guild));
-        break;
-      default:
-        message.channel.send("Available subcommands: allow, revoke, save, load, test");
-        break;
+          break;
+        case "raw":
+          if(cmds[2]) message.channel.send("RAW: " + perms.getRaw(perms.definePerm(message.guild, cmds[2])));
+          else message.channel.send("RAW: " + perms.all(message.guild));
+          break;
+        default:
+          message.channel.send("Available subcommands: allow, revoke, remove, level, save, test");
+          break;
+      }
+    }else{
+      message.channel.send("Available subcommands: allow, revoke, remove, level, save, test");
     }
   }
   /*

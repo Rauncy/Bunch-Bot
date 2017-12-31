@@ -16,25 +16,30 @@ Perms is separated into the following structure
 */
 var perms = {};
 
+exports.isLoaded = function(server){
+  return (perms[server.id] ? true : false);
+}
+
 exports.loadPerms = function(server){
-  fs.readFile(`./interactivity/content/${server.id}/perms.json`, 'utf8', (err, data) => {
-    if(err){
-      perms[server.id]={commands:{}, custcommands:{}, responses:{}, levels:{}};
-      perms[server.id].levels[server.owner.id] = 0;
-      fs.open(`./interactivity/content/${server.id}/perms.json`, 'w', (err, file) => {
-        if(err) console.error(err);
-        else console.log("Created new perms for server " + server.id);
-      });
-      //TODO dm permission tutorial to owner
-    }
-    else if(!perms[server.id]) perms[server.id] = JSON.parse(data);
-    else console.log("Data is already loaded for server " + server.id);
-  });
+  console.log("LOAD");
+  if(!fs.existsSync(`./interactivity/content/${server.id}/perms.json`)){
+    perms[server.id]={commands:{}, custcommands:{}, responses:{}, levels:{}};
+    perms[server.id].levels[server.owner.id] = -1;
+    fs.mkdir(`./interactivity/content/${server.id}`);
+    fs.open(`./interactivity/content/${server.id}/perms.json`, 'a', (err, file) => {
+      if(err) throw err;
+      else console.log("Created new perms for server " + server.id);
+    });
+    exports.savePerms(server);
+    //TODO dm permission tutorial to owner
+  }
+  else if(!perms[server.id]){
+    perms[server.id] = JSON.parse(fs.readFileSync(`./interactivity/content/${server.id}/perms.json`, 'utf8'));
+  }
+  else console.log("Data is already loaded for server " + server.id);
 };
 
 exports.savePerms = function(server){
-  //Make folder if needed
-  if(!fs.existsSync(`./interactivity/content/${server.id}`)) fs.mkdir(`./interactivity/content/${server.id}`);
   //Set files in dir
   if(perms[server.id]) fs.writeFile(`./interactivity/content/${server.id}/perms.json`, JSON.stringify(perms[server.id]), err => {
     if(err) console.error(err);
@@ -60,8 +65,8 @@ function Permission(){
 
 exports.defineType = function(s){
   if(s.startsWith("$")){
-    if(Object.keys(cmd.commands).includes(cmd.DELIMITER + s)) return "commands";
-    return "custcommands";
+    if(cmd.list().includes(cmd.DELIMITER + s)) return "commands";
+    else return "custcommands";
   }
   return "responses";
 };
@@ -76,33 +81,38 @@ exports.definePermission = function(server, name){
 exports.hasPermission = function(user, name, server){
   //preliminary elimination check
   let p = exports.definePermission(server, name);
+  var short = user.match(/\d{18}/)[0];
 
   //1. valid id, 2. valid perm, 3. user is in server
-  if(!/\d{18}/.test(user.id) || !p || !(server.members.has(user)||server.roles.has(user))) return false;
+  if(!short || !p || !server.members.get(short)) return false;
 
   var type = exports.defineType(name);
-  if(p){
-    //perm exists
-    if(p.users.includes(/[ie]{1}\d{18}/)){
-      //user match
-      console.log("usr");
-      if(p.users[users.indexOf(/[ie]{1}\d{18}/)]=="i"+user.id) return true;
-      else{
-        var roles = server.member(message.author).roles.has(user.id);
-      }
-    }else if(p.roles.includes(/[ie]{1}\d{18}/)){
-      //role match
-      console.log("rol");
-      return p.roles[users.indexOf(/[ie]{1}\d{18}/)]=="i"+user.id;
-    }else{
-      //use level
-      console.log("lvl");
-      if(perms[server.id].levels[user.id]){
-        //if has custom levels for roles/users
-        if(p.level != -1) return perms[server.id].levels[user.id] <= p.level;
-      }
+
+  //perm exists
+  var re = new RegExp("[ie]" + short);
+
+  if(p.perms.users.some(val => { return re.test(val); })){
+    //user match
+    return p.perms.users.includes("i"+short);
+  }
+  //role match
+  var iter = server.members.find("id", short).roles.keys();
+  var cur = iter.next().value;
+  while(cur){
+    var re = new RegExp("[ie]" + cur);
+
+    //if match regex will return
+    if(p.perms.roles.some(val => { return re.test(val); })){
+      //will return
+      return p.perms.roles.includes("i"+cur);
     }
-  }else return false;
+    //else continue
+    cur = iter.next().value;
+  }
+
+  //use level
+  if(perms[server.id].levels[short]) return perms[server.id].levels[short] <= p.level;
+  return false;
 };
 
 /*
@@ -111,16 +121,14 @@ Takes a user or a role and modifies it to the specified permission
 Only use prefixes i or e or else permissions break
 */
 function permit(id, prefix, perm){
-  var short;
+  var short = id.match(/\d{18}/)[0];
   if(/<@&\d{18}>/.test(id)){
     //is role
-    short = id.substring(3, 20);
     removePerms(short, perm.perms.roles);
     perm.perms.roles.push(prefix + short);
     return true;
   }else if(/<@!?\d{18}>/.test(id)){
     //is username or nick
-    short = id.substring(id.length-18, id.length-1);
     removePerms(short, perm.perms.users);
     perm.perms.users.push(prefix + short);
     return true;
@@ -149,16 +157,14 @@ exports.disallow = function(id, perm){
 };
 
 exports.remove = function(id, perm){
+  var short = id.match(/\d{18}/)[0];
   if(/<@&\d{18}>/.test(id)){
     //is role
-    return removePerms(id.substring(3, 20), perm.perms.roles);
+    return removePerms(short, perm.perms.roles);
   }else if(/<@!?\d{18}>/.test(id)){
     //is username or nick
-    return removePerms(id.substring(id.length-18, id.length-1), perm.perms.users);
-  }else{
-    //is neither
-    return false;
-  }
+    return removePerms(short, perm.perms.users);
+  }else return false;
 };
 
 exports.getRaw = function(perm){
@@ -173,5 +179,5 @@ exports.all = function(server){
   return JSON.stringify(perms[server.id]);
 }
 
-exports.setLevel = function(level, perm){perm.level = level};
-exports.removeLevel = function(perm){perm.level = undefined};
+exports.setLevel = function(server, id, level){perms[server.id].levels[id] = level;};
+exports.removeLevel = function(server, id){delete perms[server.id].levels[id];};
