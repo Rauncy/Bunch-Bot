@@ -7,25 +7,36 @@ const bot = new Discord.Client();
 
 //Import custom libraries
 const perms = require('./interactivity/perm.js');
+const cmd = require('./interactivity/command.js');
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
-  console.log(new Date())
 });
 
 var itype = false;
 
 bot.on('message', (message) => {
   let t = message.content;
+  if(t.startsWith(cmd.DELIMITER)){
+    //Test command
+    let all = cmd.list();
+    let cor = "";
+    all.forEach(val => {
+      if(t.substring(cmd.DELIMITER.length).startsWith(val) && val.length>cor.length) cor = val;
+    });
+    console.log("Command: " + cor);
+    cmd.runCommand(cor, message);
+  }
+  //Dev Bypass of perms
   if(message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.member.id)){
 
   }
+  /*
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var dokiRegex = /([literau]{3,}\s?club|ori|suki|uri|nika|do+k+i+|<@&236665582869676033>)/gi;
   var thotRegex = /^be+ +go+ne+ +(.+?)ot$/gi;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
   if(!message.author.bot && dokiRegex.test(t)){
-    /*
     var contents = dokiRegex.exec(t);
     console.log(contents);
     for(var i=1;i<contents.length;i++){
@@ -34,7 +45,6 @@ bot.on('message', (message) => {
       }
     }
     message.reply(`no ${contents.join(", or ")}. ${(contents.length>1 ? "They're" : "It's")} gay.`);
-    */
     message.reply("doki doki gay af");
   }
   if(/[o0u]+[w]+[o0u]/gi.test(t) && !message.author.bot) message.channel.send("<@&375512928872300544>");
@@ -44,6 +54,16 @@ bot.on('message', (message) => {
   if(/^\$ifEven (\d+)/ig.test(t)){
     message.channel.send("I can't even, let me try my sources");
     message.channel.send(".ifEven " + t.match(/^\$ifEven (\d+)/ig)[1]);
+  }
+  if(t.startsWith('$deconsonant')){
+    let str = t.substring(13);
+    let final = "";
+    for(var i=0;i<str.length;i++){
+      if(!/[bcdfghjklmnpqrstvwxyz]/i.test(str.charAt(i))){
+        final += str.charAt(i);
+      }
+    }
+    message.channel.send("Result: " + final);
   }
   if(t.startsWith('$perms')){
     if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
@@ -156,6 +176,7 @@ bot.on('message', (message) => {
       message.channel.send("Available subcommands: allow, revoke, remove, level, save, test");
     }
   }
+  */
   /*
   let t = message.content.toLowerCase();
   console.log(t);
