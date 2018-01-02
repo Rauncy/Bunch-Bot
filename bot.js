@@ -17,6 +17,13 @@ var itype = false;
 
 bot.on('message', (message) => {
   let t = message.content;
+  //N word
+  var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
+  if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
+
+  //Print DMs
+  if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
+  //Process commands
   if(t.startsWith(cmd.DELIMITER)){
     //Test command
     let all = cmd.list();
@@ -25,14 +32,15 @@ bot.on('message', (message) => {
       if(t.substring(cmd.DELIMITER.length).startsWith(val) && val.length>cor.length) cor = val;
     });
     console.log("Command: " + cor);
-    cmd.runCommand(cor, message);
+    if(cor.length>0) cmd.runCommand(cor, message);
   }
   //Dev Bypass of perms
-  if(message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.member.id)){
-
+  if(!message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id)){
+    console.log("isDev");
   }
   /*
-  var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
+
+  var linkRegex = /https?:\/\/.+?\.\w{2,}\/?.+?[ \n]/ig;
   var dokiRegex = /([literau]{3,}\s?club|ori|suki|uri|nika|do+k+i+|<@&236665582869676033>)/gi;
   var thotRegex = /^be+ +go+ne+ +(.+?)ot$/gi;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
