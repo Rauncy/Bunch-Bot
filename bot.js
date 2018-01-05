@@ -11,16 +11,19 @@ const cmd = require('./interactivity/command.js');
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
+  bot.user.setPresence({game:{name:"say $help"}});
 });
 
 var itype = false;
 
 bot.on('message', (message) => {
   let t = message.content;
+  let isDev = !message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id);
   //N word
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
+  var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
-
+  if(!message.author.bot && bestGirlRegex.test(t)) message.channel.send("I'm not into girls. I prefer Crash Bandicoot for best boi.");
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
   //Process commands
@@ -32,11 +35,13 @@ bot.on('message', (message) => {
       if(t.substring(cmd.DELIMITER.length).startsWith(val) && val.length>cor.length) cor = val;
     });
     console.log("Command: " + cor);
-    if(cor.length>0) cmd.runCommand(cor, message);
-  }
-  //Dev Bypass of perms
-  if(!message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id)){
-    console.log("isDev");
+    if(cor.length>0){
+      if(message.channel.type == "text"){
+        if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+        if(perms.hasPermission(message.author.id, cmd.DELIMITER + cor, message.guild) || isDev) cmd.runCommand(cor, message);
+        else message.channel.send("You do not have access to this command <@" + message.author.id + ">");
+      }else cmd.runCommand(cor, message);
+    }
   }
   /*
 

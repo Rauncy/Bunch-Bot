@@ -23,14 +23,16 @@ exports.isLoaded = function(server){
 exports.loadPerms = function(server){
   console.log("LOAD");
   if(!fs.existsSync(`./interactivity/content/${server.id}/perms.json`)){
-    perms[server.id]={commands:{}, custcommands:{}, responses:{}, levels:{}};
+    perms[server.id]={commands:{$perms:{level:-1,perms:{roles:[],users:["i"+server.owner.id]}}}, custcommands:{}, responses:{}, levels:{}};
     perms[server.id].levels[server.owner.id] = -1;
-    fs.mkdir(`./interactivity/content/${server.id}`);
+    if(!fs.existsSync(`./interactivity/content/${server.id}`)) fs.mkdir(`./interactivity/content/${server.id}`);
     fs.open(`./interactivity/content/${server.id}/perms.json`, 'a', (err, file) => {
       if(err) throw err;
-      else console.log("Created new perms for server " + server.id);
+      else{
+        exports.savePerms(server);
+        console.log("Created new perms for server " + server.id);
+      }
     });
-    exports.savePerms(server);
     //TODO dm permission tutorial to owner
   }
   else if(!perms[server.id]){
@@ -58,14 +60,14 @@ exports.saveAllPerms = function(){
 //Permission object
 function Permission(){
   //Lower levels are better, lowest being 0
-  this.level = -1;
+  this.level = 0;
   //Perms preceded level, level is only viable when there is no data for the user or their role on perms
   this.perms = {roles : [], users : []};
 };
 
 exports.defineType = function(s){
-  if(s.startsWith("$")){
-    if(cmd.list().includes(cmd.DELIMITER + s)) return "commands";
+  if(s.startsWith(cmd.DELIMITER)){
+    if(cmd.list().includes(s.substring(cmd.DELIMITER.length))) return "commands";
     else return "custcommands";
   }
   return "responses";
@@ -73,7 +75,15 @@ exports.defineType = function(s){
 
 exports.definePermission = function(server, name){
   let type = exports.defineType(name);
-  if(!perms[server.id][type][name]) perms[server.id][type][name] = new Permission();
+  if(!perms[server.id][type][name]){
+    //Check if name starts with perm
+    let best = "";
+    Object.keys(perms[server.id][type]).forEach(val => {
+      if(name.startsWith(val) && val.length>best.length) best = val;
+    });
+    if(best.length>0) return perms[server.id][type][best];
+    else perms[server.id][type][name] = new Permission();
+  }
   return perms[server.id][type][name];
 };
 
@@ -111,8 +121,8 @@ exports.hasPermission = function(user, name, server){
   }
 
   //use level
-  if(perms[server.id].levels[short]) return perms[server.id].levels[short] <= p.level;
-  return false;
+  if(!perms[server.id].levels[short]) perms[server.id].levels[short]=0;
+  return perms[server.id].levels[short] <= p.level;
 };
 
 /*
@@ -121,7 +131,7 @@ Takes a user or a role and modifies it to the specified permission
 Only use prefixes i or e or else permissions break
 */
 function permit(id, prefix, perm){
-  var short = id.match(/\d{18}/)[0];
+  var short = id.match(/(\d{18})/)[1];
   if(/<@&\d{18}>/.test(id)){
     //is role
     removePerms(short, perm.perms.roles);
@@ -149,11 +159,11 @@ function removePerms(id, arr){
 }
 
 exports.allow = function(id, perm){
-  permit(id, "i", perm);
+  return permit(id, "i", perm);
 };
 
 exports.disallow = function(id, perm){
-  permit(id, "e", perm);
+  return permit(id, "e", perm);
 };
 
 exports.remove = function(id, perm){

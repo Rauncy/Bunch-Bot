@@ -2,6 +2,9 @@
 
 const fs = require('fs');
 
+//Custom Libraries
+const perms = require("./perm.js")
+
 const CMD_DELIMITER = "$";
 const HELP_DATA = {
   help : {
@@ -9,12 +12,20 @@ const HELP_DATA = {
     synt : ["Command Name"]
   },
   perms : {
-    desc : "Allows modification of permissions within the bot.",
+    desc : "Allows modification of permissions within the bot. Subcommands: \"allow\", \"revoke\", \"remove\", \"level\", \"test\", and \"raw\"",
     synt : ["Function", "Target", "Command"]
   },
   ifeven : {
     desc : "Tests if a number is even or not because I can't use CJ's bot :(",
     synt : ["Number"]
+  },
+  coinflip : {
+    desc : "Flips a coin.",
+    synt : []
+  },
+  ment : {
+    desc : "Allows mention lists to be added, removed, and modified. Subcommands: \"add\", \"remove\", \"random\", and \"list\".",
+    synt : ["Subcommand", "List", "Target"]
   }
 };
 exports.DELIMITER = CMD_DELIMITER;
@@ -116,9 +127,6 @@ addCommand("help syntax", "s", (message, params) => {
     message.channel.send("\"" + params[0] + "\" is not a command, type $list for all default commands.");
   }
 });
-addCommand("perms", "s", (message, params) => {
-  message.channel.send("Yea this command don't work :/");
-});
 addCommand("ifeven", "ws", (message, params) => {
   if(/\d/ig.test(params[0])){
     params[0] = parseInt(params[0]);
@@ -153,7 +161,7 @@ addCommand("ment", "w", (message, params) => {
   //data goes in ./content/[serverid]/ment.json
   var ments = loadMents(message.guild.id);
   params[0] = params[0].toLowerCase();
-  if(ments[params[0]] && ments[params[0]].length>0) message.channel.send(params[0].toUpperCase() + ": " + ments[params[0]].join(", "));
+  if(ments[params[0]] && ments[params[0]].length>0) message.channel.send(params[0].toUpperCase() + ": <@" + ments[params[0]].join(">, <@") + ">");
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \"$ment add " + params[0] + " [user]\".")
   else message.channel.send(params[0] + " is not a mention. Type $ment list for a list of mentions.");
 });
@@ -180,17 +188,17 @@ addCommand("ment add", "ws", (message, params) => {
     }
   }else{
     //Parse user
-    params[1]=params[1].match(/<@!?(\d{18})>/)[0];
+    params[1]=params[1].match(/<@!?(\d{18})>/)[1];
     //Add user
     if(ments[params[0]]){
       //Test for if user exists
       if(!ments[params[0]].includes(params[1])){
         ments[params[0]].push(params[1]);
-        message.channel.send(params[1] + " was added to " + params[0] + ".");
+        message.channel.send("<@" + params[1] + "> was added to " + params[0] + ".");
       }
       else{
         //User already in mention
-        message.channel.send(params[1] + " is already in " + params[0] + ".");
+        message.channel.send("<@" + params[1] + "> is already in " + params[0] + ".");
       }
     }else{
       message.channel.send(params[0] + " is not a mention list. Type \"$ment list\" for a list of mentions.");
@@ -214,16 +222,16 @@ addCommand("ment remove", "ws", (message, params) => {
     }
   }else{
     //Remove user
-    params[1]=params[1].match(/<@!?(\d{18})>/)[0];
+    params[1]=params[1].match(/<@!?(\d{18})>/)[1];
     if(ments[params[0]]){
       //List exists
       if(ments[params[0]].includes(params[1])){
         //Remove
         ments[params[0]].splice(ments[params[0]].indexOf(params[1]), 1);
-        message.channel.send(params[1] + " was removed from " + params[0]);
+        message.channel.send("<@" + params[1] + "> was removed from " + params[0] + ".");
       }else{
         //Doesn't exist
-        message.channel.send(params[1] + " does not exist in " + params[0] + ".");
+        message.channel.send("<@" + params[1] + "> does not exist in " + params[0] + ".");
       }
     }
   }
@@ -232,13 +240,45 @@ addCommand("ment remove", "ws", (message, params) => {
 addCommand("ment random", "s", (message, params) => {
   var ments = loadMents(message.guild.id);
   var choice = Object.keys(ments)[Math.floor(Math.random()*Object.keys(ments).length)];
-  message.channel.send(choice.toUpperCase() + ": " + ments[choice].join(","));
+  message.channel.send(choice.toUpperCase() + ": <@" + ments[choice].join(">, <@") + ">");
 });
 addCommand("ment list", "s", (message, params) => {
   var ments = loadMents(message.guild.id);
   if(Object.keys(ments).length>0) message.channel.send("LIST: " + Object.keys(ments).join(", "));
   else message.channel.send("There are no mention lists. Add some with \"$ment add [name]\".");
 });
+
+//Perms
+addCommand("perms allow", "ws", (message, params) => {
+  if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+  if(perms.allow(params[0], perms.definePermission(message.guild, params[1]))){
+    message.channel.send("Allowed " + params[0] + " into " + params[1] + ".");
+  }else message.channel.send("Failed to allow " + params[0] + " into " + params[1] + ".");
+  perms.savePerms(message.guild);
+});
+addCommand("perms revoke", "ws", (message, params) => {
+  if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+  if(perms.disallow(params[0], perms.definePermission(message.guild, params[1]))){
+    message.channel.send("Revoked " + params[0] + " from " + params[1] + ".");
+  }else message.channel.send("Failed to revoke " + params[0] + " from " + params[1] + ". I dunno why, but it happened.");
+  perms.savePerms(message.guild);
+});
+addCommand("perms remove", "ws", (message, params) => {
+  if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+  if(perms.remove(params[0], perms.definePermission(message.guild, params[1]))){
+    message.channel.send("Removed " + params[0] + " from " + params[1] + " successfully.");
+  }else message.channel.send("Failed to remove " + params[0] + " from " + params[1] + ".");
+  perms.savePerms(message.guild);
+});
+addCommand("perms level", "ww", (message, params) => {
+  message.channel.send("Yea this don't work yet :/");
+});
+addCommand("perms raw", "s", (message, params) => {
+  console.log(perms.isLoaded(message.guild));
+  if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+  message.channel.send(perms.all(message.guild));
+});
+
 addCommand("cointoss", "s", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)==0) ? "heads" : "tails") + ".");
 });
