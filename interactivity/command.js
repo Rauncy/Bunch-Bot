@@ -69,10 +69,12 @@ W: Next word
 function separateParams(cmd, text){
   if(text.startsWith(CMD_DELIMITER + cmd)){
     //Process params
-    text = text.substring(cmd.length+2);
+    text = text.substring(cmd.length+CMD_DELIMITER.length+1);
     let list = commands[cmd].param;
     let params = [];
+    console.log(cmd + " " + list);
     while(list.charAt(0).toLowerCase()!="s" && text.length>0){
+      console.log("Loop");
       switch(list.charAt(0).toLowerCase()){
         case "c":
           params.push(text.charAt(0));
@@ -85,14 +87,14 @@ function separateParams(cmd, text){
           break;
       }
       if(text.includes(" ")) text = text.substring(text.indexOf(" ")+1);
-      else text = "";
 
       list = list.substring(1);
     }
     if(list.charAt(0)=='s'){
       if(text.length>0) params.push(text);
-      else params.push(" ");
     }
+    console.log("P: " + params.join(" | "));
+    console.log("PR: " + params);
     return params;
   }else return undefined;
 };
@@ -104,7 +106,7 @@ exports.list = function(){
 exports.runCommand = function(name, message){
   var pars = separateParams(name, message.content);
   if(commands[name]){
-    if(pars[commands[name].param.length-1]){
+    if(pars.length===commands[name].param.length){
       commands[name].run(message, separateParams(name, message.content));
     }else{
       message.channel.send("You did not meet all the paramaters for " + name + ". Use $help syntax [command] for formatting");
@@ -292,7 +294,7 @@ addCommand("cointoss", "s", (message, params) => {
 addCommand("list", "s", (message, params) => {
   message.channel.send("LIST: $" + Object.keys(commands).join(", $"));
 });
-addCommand("test", "s", (message, params) => {
+addCommand("test", "", (message, params) => {
   message.channel.send({embed:{
     color:15266882,
     title:"Test",
