@@ -19,7 +19,7 @@ const HELP_DATA = {
     desc : "Tests if a number is even or not because I can't use CJ's bot :(",
     synt : ["Number"]
   },
-  coinflip : {
+  cointoss : {
     desc : "Flips a coin.",
     synt : []
   },
@@ -276,9 +276,26 @@ addCommand("perms level", "ww", (message, params) => {
 addCommand("perms raw", "s", (message, params) => {
   console.log(perms.isLoaded(message.guild));
   if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
-  message.channel.send(perms.all(message.guild));
+  let all = perms.all(message.guild);
+  all.replace(/:([{\[])/ig, ":\n$1");
+  all.replace(/[{\[]/ig, "$1\n");
+  message.channel.send({embed:{
+    color:3557316,
+    description:all,
+    title:"Raw permissions for " + message.guild.name
+  }});
 });
 
 addCommand("cointoss", "s", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)==0) ? "heads" : "tails") + ".");
+});
+addCommand("list", "s", (message, params) => {
+  message.channel.send("LIST: $" + Object.keys(commands).join(", $"));
+});
+addCommand("test", "s", (message, params) => {
+  message.channel.send({embed:{
+    color:15266882,
+    title:"Test",
+    description:"Dankerino"
+  }});
 });

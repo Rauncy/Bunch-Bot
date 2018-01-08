@@ -22,8 +22,10 @@ bot.on('message', (message) => {
   //N word
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
+  var benSwoloRegex = /ben swo+lo+/ig;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
   if(!message.author.bot && bestGirlRegex.test(t)) message.channel.send("I'm not into girls. I prefer Crash Bandicoot for best boi.");
+  if(!message.author.bot && benSwoloRegex.test(t)) message.channel.send("I really don't want to do this right now...", {files : ["http://i0.kym-cdn.com/entries/icons/original/000/025/003/benswoll.jpg"]});
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
   //Process commands
@@ -41,6 +43,9 @@ bot.on('message', (message) => {
         if(perms.hasPermission(message.author.id, cmd.DELIMITER + cor, message.guild) || isDev) cmd.runCommand(cor, message);
         else message.channel.send("You do not have access to this command <@" + message.author.id + ">");
       }else cmd.runCommand(cor, message);
+    }else{
+      console.log(cmd.DELIMITER.length + " " + t.indexOf(" "));
+      message.channel.send("\"" + t.substring(cmd.DELIMITER.length,(t.indexOf(" ")!=-1 ? t.indexOf(" ") : t.length)) + "\" is not a command. Type \"$list\" for all commands.");
     }
   }
   /*

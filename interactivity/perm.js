@@ -67,7 +67,9 @@ function Permission(){
 
 exports.defineType = function(s){
   if(s.startsWith(cmd.DELIMITER)){
-    if(cmd.list().includes(s.substring(cmd.DELIMITER.length))) return "commands";
+    if(cmd.list().some(val => {
+      return val.startsWith(s.substring(cmd.DELIMITER.length));
+    })) return "commands";
     else return "custcommands";
   }
   return "responses";
