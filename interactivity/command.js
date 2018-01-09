@@ -65,6 +65,7 @@ String guide:
 S: String of rest of command, always last
 C: First character of next word
 W: Next word
+*: End of required params
 */
 function separateParams(cmd, text){
   if(text.startsWith(CMD_DELIMITER + cmd)){
@@ -72,9 +73,7 @@ function separateParams(cmd, text){
     text = text.substring(cmd.length+CMD_DELIMITER.length+1);
     let list = commands[cmd].param;
     let params = [];
-    console.log(cmd + " " + list);
-    while(list.charAt(0).toLowerCase()!="s" && text.length>0){
-      console.log("Loop");
+    while(list.length>0 && list.charAt(0).toLowerCase()!="s" && text.length>0){
       switch(list.charAt(0).toLowerCase()){
         case "c":
           params.push(text.charAt(0));
@@ -83,18 +82,19 @@ function separateParams(cmd, text){
           if(text.includes(" ")) params.push(text.substring(0, text.indexOf(" ")));
           else params.push(text);
           break;
+        case "*":
+          list = list.substring(1);
+          continue;
         default:
           break;
       }
       if(text.includes(" ")) text = text.substring(text.indexOf(" ")+1);
-
+      else text="";
       list = list.substring(1);
     }
     if(list.charAt(0)=='s'){
       if(text.length>0) params.push(text);
     }
-    console.log("P: " + params.join(" | "));
-    console.log("PR: " + params);
     return params;
   }else return undefined;
 };
@@ -106,7 +106,7 @@ exports.list = function(){
 exports.runCommand = function(name, message){
   var pars = separateParams(name, message.content);
   if(commands[name]){
-    if(pars.length===commands[name].param.length){
+    if(pars.length>=(commands[name].param.includes("*") ? commands[name].param.indexOf("*") : commands[name].param.length)){
       commands[name].run(message, separateParams(name, message.content));
     }else{
       message.channel.send("You did not meet all the paramaters for " + name + ". Use $help syntax [command] for formatting");
@@ -115,7 +115,7 @@ exports.runCommand = function(name, message){
 };
 
 //Commands after this line
-addCommand("help", "s", (message, params) => {
+addCommand("help", "*s", (message, params) => {
   if(exports.list().includes(params[0])){
     message.channel.send(params[0].toUpperCase() + ": " + HELP_DATA[params[0].toLowerCase()].desc);
   }else{
@@ -159,6 +159,8 @@ function loadMents(serverID){
   }
 }
 
+function isID(s){return s.test(/\d{18}/)}
+
 addCommand("ment", "w", (message, params) => {
   //data goes in ./content/[serverid]/ment.json
   var ments = loadMents(message.guild.id);
@@ -167,10 +169,10 @@ addCommand("ment", "w", (message, params) => {
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \"$ment add " + params[0] + " [user]\".")
   else message.channel.send(params[0] + " is not a mention. Type $ment list for a list of mentions.");
 });
-addCommand("ment add", "ws", (message, params) => {
+addCommand("ment add", "w*s", (message, params) => {
   var ments = loadMents(message.guild.id);
   params[0]=params[0].toLowerCase();
-  if(params[1]==' '){
+  if(!params[1]){
     //Add category
     //Test for forbidden groups
     if(!ments[params[0]]){
@@ -209,10 +211,10 @@ addCommand("ment add", "ws", (message, params) => {
   }
   saveMents(message.guild.id, ments);
 });
-addCommand("ment remove", "ws", (message, params) => {
+addCommand("ment remove", "w*s", (message, params) => {
   var ments = loadMents(message.guild.id);
   params[0]=params[0].toLowerCase();
-  if(params[1]==' '){
+  if(!params[1]){
     //Remove group
     if(ments[params[0]]){
       delete ments[params[0]];
@@ -239,18 +241,21 @@ addCommand("ment remove", "ws", (message, params) => {
   }
   saveMents(message.guild.id, ments);
 });
-addCommand("ment random", "s", (message, params) => {
+addCommand("ment random", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   var choice = Object.keys(ments)[Math.floor(Math.random()*Object.keys(ments).length)];
   message.channel.send(choice.toUpperCase() + ": <@" + ments[choice].join(">, <@") + ">");
 });
-addCommand("ment list", "s", (message, params) => {
+addCommand("ment list", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   if(Object.keys(ments).length>0) message.channel.send("LIST: " + Object.keys(ments).join(", "));
   else message.channel.send("There are no mention lists. Add some with \"$ment add [name]\".");
 });
 
 //Perms
+addCommand("perms", "", (message, params) => {
+  message.channel.send("Perms... there ya go", {files : ["https://imagesvc.timeincapp.com/v3/mm/image?url=http%3A%2F%2Fcdn-img.instyle.com%2Fsites%2Fdefault%2Ffiles%2Fimages%2F2017%2F03%2F031617-perm-embed-add-1.jpg"]});
+});
 addCommand("perms allow", "ws", (message, params) => {
   if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
   if(perms.allow(params[0], perms.definePermission(message.guild, params[1]))){
@@ -275,7 +280,7 @@ addCommand("perms remove", "ws", (message, params) => {
 addCommand("perms level", "ww", (message, params) => {
   message.channel.send("Yea this don't work yet :/");
 });
-addCommand("perms raw", "s", (message, params) => {
+addCommand("perms raw", "", (message, params) => {
   console.log(perms.isLoaded(message.guild));
   if(message.channel.type == "text" && !perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
   let all = perms.all(message.guild);
@@ -288,10 +293,10 @@ addCommand("perms raw", "s", (message, params) => {
   }});
 });
 
-addCommand("cointoss", "s", (message, params) => {
+addCommand("cointoss", "", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)==0) ? "heads" : "tails") + ".");
 });
-addCommand("list", "s", (message, params) => {
+addCommand("list", "", (message, params) => {
   message.channel.send("LIST: $" + Object.keys(commands).join(", $"));
 });
 addCommand("test", "", (message, params) => {

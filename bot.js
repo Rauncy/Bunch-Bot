@@ -23,9 +23,13 @@ bot.on('message', (message) => {
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
   var benSwoloRegex = /ben swo+lo+/ig;
+  var deWayRegex = /^do [you]+ k?no+w? d[ea] w[ea][ey]/ig;
+  var spitRegex = /k?nu[ck]{2}les?.*?(ba+d|ter+ible+|overused|shi+t)/ig;
   if(!message.author.bot && nWordRegex.test(t)) message.reply(`You mean "${t.replace(nWordRegex, "$1gger$2")}"?`);
   if(!message.author.bot && bestGirlRegex.test(t)) message.channel.send("I'm not into girls. I prefer Crash Bandicoot for best boi.");
   if(!message.author.bot && benSwoloRegex.test(t)) message.channel.send("I really don't want to do this right now...", {files : ["http://i0.kym-cdn.com/entries/icons/original/000/025/003/benswoll.jpg"]});
+  if(!message.author.bot && deWayRegex.test(t)) message.channel.send(message.author + " does not no de way. Dey do not hav de ebola.");
+  if(!message.author.bot && spitRegex.test(t)) message.channel.send("Spit on de non beleeva!");
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
   //Process commands
@@ -41,7 +45,7 @@ bot.on('message', (message) => {
       if(message.channel.type == "text"){
         if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
         if(perms.hasPermission(message.author.id, cmd.DELIMITER + cor, message.guild) || isDev) cmd.runCommand(cor, message);
-        else message.channel.send("You do not have access to this command <@" + message.author.id + ">");
+        else message.channel.send("You do not have access to this command " + message.author);
       }else cmd.runCommand(cor, message);
     }else{
       console.log(cmd.DELIMITER.length + " " + t.indexOf(" "));
