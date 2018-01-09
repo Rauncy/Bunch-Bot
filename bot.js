@@ -9,6 +9,8 @@ const bot = new Discord.Client();
 const perms = require('./interactivity/perm.js');
 const cmd = require('./interactivity/command.js');
 
+exports.silenceDaBoi = false;
+
 bot.on('ready', () => {
   console.log("Bot is now online!");
   bot.user.setPresence({game:{name:"say $help"}});
@@ -19,6 +21,7 @@ var itype = false;
 bot.on('message', (message) => {
   let t = message.content;
   let isDev = !message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id);
+  if(message.author.id === "168444189212672001" && exports.silenceDaBoi) message.delete();
   //N word
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
@@ -49,7 +52,7 @@ bot.on('message', (message) => {
       }else cmd.runCommand(cor, message);
     }else{
       console.log(cmd.DELIMITER.length + " " + t.indexOf(" "));
-      message.channel.send("\"" + t.substring(cmd.DELIMITER.length,(t.indexOf(" ")!=-1 ? t.indexOf(" ") : t.length)) + "\" is not a command. Type \"$list\" for all commands.");
+      message.channel.send("\"" + t.substring(cmd.DELIMITER.length,(t.indexOf(" ")!=-1 ? t.indexOf(" ") : t.length)) + "\" is not a command. Type \"$help\" for all default commands.");
     }
   }
   /*
@@ -491,3 +494,5 @@ function processCommand(message){
 }
 
 bot.login('MzE3ODY0OTk4NzI4NzYxMzQ0.DOUzWQ.I5BPMCtejrCLZ51_otLQVcGErKA');
+//u"mfa._mN9Q0nVoF0-HYeIdwnzQfBMu_JIAO6ZOvHAti_LIWVaHpfJsJzDS23rPVYkHIQbJF3Fmd_rQqouKOEVxm-u"
+//b""

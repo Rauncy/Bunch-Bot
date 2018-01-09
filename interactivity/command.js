@@ -116,17 +116,22 @@ exports.runCommand = function(name, message){
 
 //Commands after this line
 addCommand("help", "*s", (message, params) => {
-  if(exports.list().includes(params[0])){
+  if(!params[0]) message.channel.send({embed:{
+    title:"Default commands",
+    description:"$" + Object.keys(commands).join(", $"),
+    color:15575319
+  }});
+  else if(exports.list().includes(params[0])){
     message.channel.send(params[0].toUpperCase() + ": " + HELP_DATA[params[0].toLowerCase()].desc);
   }else{
-    message.channel.send("\"" + params[0] + "\" is not a command, type $list for all default commands.");
+    message.channel.send("\"" + params[0] + "\" is not a command, type $help for all default commands.");
   }
 });
 addCommand("help syntax", "s", (message, params) => {
   if(exports.list().includes(params[0])){
     message.channel.send("SYNTAX OF " + params[0].toUpperCase() + ": " + CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[params[0].toLowerCase()].synt.join("] [") + "]");
   }else{
-    message.channel.send("\"" + params[0] + "\" is not a command, type $list for all default commands.");
+    message.channel.send("\"" + params[0] + "\" is not a command, type $help for all default commands.");
   }
 });
 addCommand("ifeven", "ws", (message, params) => {
@@ -296,13 +301,18 @@ addCommand("perms raw", "", (message, params) => {
 addCommand("cointoss", "", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)==0) ? "heads" : "tails") + ".");
 });
-addCommand("list", "", (message, params) => {
-  message.channel.send("LIST: $" + Object.keys(commands).join(", $"));
-});
 addCommand("test", "", (message, params) => {
   message.channel.send({embed:{
     color:15266882,
     title:"Test",
     description:"Dankerino"
   }});
+});
+addCommand("talktome", "", (message, params) => {
+  message.channel.send("Talk to the tome " + message.author,{files:["https://vignette.wikia.nocookie.net/darksouls/images/9/90/Braille_Divine_Tome_of_Carim.png"]});
+});
+addCommand("silencio", "", (message, params) => {
+  let m = require("../bot.js");
+  m.silenceDaBoi = !m.silenceDaBoi;
+  message.channel.send("Silencio " + (m.silenceDaBoi ? "" : "de") + "activato.");
 });
