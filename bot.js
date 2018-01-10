@@ -21,7 +21,7 @@ var itype = false;
 bot.on('message', (message) => {
   let t = message.content;
   let isDev = !message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id);
-  if(message.author.id === "168444189212672001" && exports.silenceDaBoi) message.delete();
+  if(message.author.id === "375534890516480002" && exports.silenceDaBoi) message.delete();
   //N word
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
@@ -494,5 +494,4 @@ function processCommand(message){
 }
 
 bot.login('MzE3ODY0OTk4NzI4NzYxMzQ0.DOUzWQ.I5BPMCtejrCLZ51_otLQVcGErKA');
-//u"mfa._mN9Q0nVoF0-HYeIdwnzQfBMu_JIAO6ZOvHAti_LIWVaHpfJsJzDS23rPVYkHIQbJF3Fmd_rQqouKOEVxm-u"
 //b""

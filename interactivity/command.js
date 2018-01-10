@@ -11,13 +11,17 @@ const HELP_DATA = {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
     synt : ["Command Name"]
   },
-  perms : {
-    desc : "Allows modification of permissions within the bot. Subcommands: \"allow\", \"revoke\", \"remove\", \"level\", \"test\", and \"raw\"",
-    synt : ["Function", "Target", "Command"]
+  "help syntax" : {
+    desc : "Tells you what is required for commands.",
+    synt : ["Command Name"]
   },
   ifeven : {
     desc : "Tests if a number is even or not because I can't use CJ's bot :(",
     synt : ["Number"]
+  },
+  perms : {
+    desc : "Allows modification of permissions within the bot. Subcommands: \"allow\", \"revoke\", \"remove\", \"level\", \"test\", and \"raw\"",
+    synt : ["Function", "Target", "Command"]
   },
   cointoss : {
     desc : "Flips a coin.",
@@ -122,16 +126,60 @@ addCommand("help", "*s", (message, params) => {
     color:15575319
   }});
   else if(exports.list().includes(params[0])){
-    message.channel.send(params[0].toUpperCase() + ": " + HELP_DATA[params[0].toLowerCase()].desc);
+    var best = "";
+    Object.keys(HELP_DATA).forEach(val => {
+      if(params[0].startsWith(val) && val.length>best.length) best=val;
+    });
+    if(best.length>0){
+      //TODO splice already given paramaters
+      message.channel.send({embed:{
+        desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best].synt.join("] [") + "]",
+        title:"Syntax of " + params[0].toLowerCase(),
+        color:15575319
+      }});
+    }else{
+      message.channel.send({embed:{
+        title:"Help Error",
+        desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+        color:10818837
+      }});
+    }
   }else{
     message.channel.send("\"" + params[0] + "\" is not a command, type $help for all default commands.");
   }
 });
 addCommand("help syntax", "s", (message, params) => {
-  if(exports.list().includes(params[0])){
-    message.channel.send("SYNTAX OF " + params[0].toUpperCase() + ": " + CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[params[0].toLowerCase()].synt.join("] [") + "]");
+  if(Object.keys(HELP_DATA).includes(params[0])){
+    message.channel.send({embed:{
+      desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[params[0].toLowerCase()].synt.join("] [") + "]",
+      title:"Syntax of " + params[0].toLowerCase(),
+      color:15575319
+    }});
+  }else if(exports.list().includes(params[0])){
+    var best = "";
+    Object.keys(HELP_DATA).forEach(val => {
+      if(params[0].startsWith(val) && val.length>best.length) best=val;
+    });
+    console.log("\"" + best + "\"");
+    if(best.length===0) message.channel.send({embed:{
+      title:"Help Error",
+      desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+      color:10818837
+    }});
+    else{
+      //TODO splice already given paramaters
+      message.channel.send({embed:{
+        desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best.toLowerCase()].synt.join("] [") + "]",
+        title:"Syntax of " + params[0].toLowerCase(),
+        color:15575319
+      }});
+    }
   }else{
-    message.channel.send("\"" + params[0] + "\" is not a command, type $help for all default commands.");
+    message.channel.send({embed:{
+      title:"Help Error",
+      desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+      color:10818837
+    }});
   }
 });
 addCommand("ifeven", "ws", (message, params) => {
@@ -142,7 +190,7 @@ addCommand("ifeven", "ws", (message, params) => {
 });
 addCommand("relay", "ws", (message, params) => {
   if(params[0].includes("#")) message.client.channels.get(params[0].substring(2, 20)).send(params[1]);
-  else if(params[0].includes("@"));
+  else if(params[0].includes("@")) message.client.get();
 });
 //Mentions
 
@@ -195,7 +243,7 @@ addCommand("ment add", "w*s", (message, params) => {
       //Already exists
       message.channel.send(params[0] + " is already a mention list. Type \"$ment list\" for a list of mentions.");
     }
-  }else{
+  }else if(/<@!?\d{18}>/.test(params[1])){
     //Parse user
     params[1]=params[1].match(/<@!?(\d{18})>/)[1];
     //Add user
@@ -213,6 +261,12 @@ addCommand("ment add", "w*s", (message, params) => {
       message.channel.send(params[0] + " is not a mention list. Type \"$ment list\" for a list of mentions.");
       //Mention does not exist
     }
+  }else{
+    message.channel.send({embed:{
+      description:params[1] + " is not a valid user. Please mention the person you want to add when trying again.",
+      title:"Mention Error",
+      color:10818837
+    }});
   }
   saveMents(message.guild.id, ments);
 });
@@ -229,8 +283,9 @@ addCommand("ment remove", "w*s", (message, params) => {
       //Group does not exist
       message.channel.send(params[0] + " does not exist. Type \"$ment list\" for a list of mentions.");
     }
-  }else{
+  }else if(/<@!?\d{18}>/.test(params[1])){
     //Remove user
+    console.log()
     params[1]=params[1].match(/<@!?(\d{18})>/)[1];
     if(ments[params[0]]){
       //List exists
@@ -243,6 +298,12 @@ addCommand("ment remove", "w*s", (message, params) => {
         message.channel.send("<@" + params[1] + "> does not exist in " + params[0] + ".");
       }
     }
+  }else{
+    message.channel.send({embed:{
+      description:params[1] + " is not a valid user. Please mention the person you want to remove when trying again.",
+      title:"Mention Error",
+      color:10818837
+    }});
   }
   saveMents(message.guild.id, ments);
 });
@@ -315,4 +376,27 @@ addCommand("silencio", "", (message, params) => {
   let m = require("../bot.js");
   m.silenceDaBoi = !m.silenceDaBoi;
   message.channel.send("Silencio " + (m.silenceDaBoi ? "" : "de") + "activato.");
+});
+addCommand("join", "", (message, params) => {
+  if(message.member.voiceChannel) message.member.voiceChannel.join().then(con => {
+    console.log("Connected");}).catch((err)=>{
+      console.log(err);
+    });
+});
+addCommand("randompin", "s", (message, params) => {
+  if(message.channel.type=="text"){
+    var mat = params[0].match(/(\d{18})/ig)[0];
+    if(mat && message.guild.channels.has(mat)){
+      message.guild.channels.get(mat).fetchPinnedMessages().then(res => {
+        if(res.array().length>0) message.channel.send("Random pin: " + res.array()[Math.floor(Math.random()*res.array().length)]);
+        else message.channel.send("This channel has no pins!");
+      });
+    }else message.channel.send(params[0] + " is not a valid channel.");
+  }else message.channel.send("Please give me a server chat.");
+});
+addCommand("dm", "ws", (message, params) => {
+  let uid = params[0].match(/\d{18}/)[0];
+  if(uid && message.guild.members.has(uid)) message.guild.members.get(uid).createDM().then(c => {
+    c.send(params[1]);
+  });
 });
