@@ -11,10 +11,6 @@ const HELP_DATA = {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
     synt : ["Command Name"]
   },
-  "help syntax" : {
-    desc : "Tells you what is required for commands.",
-    synt : ["Command Name"]
-  },
   ifeven : {
     desc : "Tests if a number is even or not because I can't use CJ's bot :(",
     synt : ["Number"]
@@ -133,14 +129,14 @@ addCommand("help", "*s", (message, params) => {
     if(best.length>0){
       //TODO splice already given paramaters
       message.channel.send({embed:{
-        desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best].synt.join("] [") + "]",
         title:"Syntax of " + params[0].toLowerCase(),
+        description:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best].synt.join("] [") + "]",
         color:15575319
       }});
     }else{
       message.channel.send({embed:{
         title:"Help Error",
-        desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+        description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
         color:10818837
       }});
     }
@@ -151,7 +147,7 @@ addCommand("help", "*s", (message, params) => {
 addCommand("help syntax", "s", (message, params) => {
   if(Object.keys(HELP_DATA).includes(params[0])){
     message.channel.send({embed:{
-      desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[params[0].toLowerCase()].synt.join("] [") + "]",
+      description:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[params[0].toLowerCase()].synt.join("] [") + "]",
       title:"Syntax of " + params[0].toLowerCase(),
       color:15575319
     }});
@@ -163,14 +159,14 @@ addCommand("help syntax", "s", (message, params) => {
     console.log("\"" + best + "\"");
     if(best.length===0) message.channel.send({embed:{
       title:"Help Error",
-      desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+      description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
       color:10818837
     }});
     else{
       //TODO splice already given paramaters
       message.channel.send({embed:{
-        desctiption:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best.toLowerCase()].synt.join("] [") + "]",
         title:"Syntax of " + params[0].toLowerCase(),
+        description:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best.toLowerCase()].synt.join("] [") + "]",
         color:15575319
       }});
     }
@@ -214,11 +210,17 @@ function loadMents(serverID){
 
 function isID(s){return s.test(/\d{18}/)}
 
-addCommand("ment", "w", (message, params) => {
+addCommand("ment", "w*w", (message, params) => {
   //data goes in ./content/[serverid]/ment.json
   var ments = loadMents(message.guild.id);
   params[0] = params[0].toLowerCase();
-  if(ments[params[0]] && ments[params[0]].length>0) message.channel.send(params[0].toUpperCase() + ": <@" + ments[params[0]].join(">, <@") + ">");
+  if(ments[params[0]] && ments[params[0]].length>0){
+    var list = ments[params[0]];
+    if(params[1]){
+
+    }
+    message.channel.send(params[0].toUpperCase() + ": <@" + list.join(">, <@") + ">");
+  }
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \"$ment add " + params[0] + " [user]\".")
   else message.channel.send(params[0] + " is not a mention. Type $ment list for a list of mentions.");
 });
@@ -399,4 +401,13 @@ addCommand("dm", "ws", (message, params) => {
   if(uid && message.guild.members.has(uid)) message.guild.members.get(uid).createDM().then(c => {
     c.send(params[1]);
   });
+});
+addCommand("random", "w*w", (message, params) => {
+  var low = params[0].split("-");
+  var high = parseInt(low[1]);
+  low = parseInt(low[0]);
+  var i = (params[1] ? params[1] : 1);
+  var out = "";
+  while(--i>=0) out += " " + (Math.floor(Math.random()*(high-low+1)+low));
+  message.channel.send("Random number from " + low + " to " + high + (params[1] ? " " + params[1] + " times" : "") + ":" + out);
 });
