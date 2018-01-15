@@ -5,7 +5,7 @@ const fs = require('fs');
 //Custom Libraries
 const perms = require("./perm.js")
 
-const CMD_DELIMITER = "$";
+const CMD_DELIMITER = "plz daddy colton ";
 const HELP_DATA = {
   help : {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
@@ -109,7 +109,7 @@ exports.runCommand = function(name, message){
     if(pars.length>=(commands[name].param.includes("*") ? commands[name].param.indexOf("*") : commands[name].param.length)){
       commands[name].run(message, separateParams(name, message.content));
     }else{
-      message.channel.send("You did not meet all the paramaters for " + name + ". Use $help syntax [command] for formatting");
+      message.channel.send("You did not meet all the paramaters for " + name + ". Use "+CMD_DELIMITER+"help syntax [command] for formatting");
     }
   }
 };
@@ -118,7 +118,7 @@ exports.runCommand = function(name, message){
 addCommand("help", "*s", (message, params) => {
   if(!params[0]) message.channel.send({embed:{
     title:"Default commands",
-    description:"$" + Object.keys(commands).join(", $"),
+    description:CMD_DELIMITER + Object.keys(commands).join(", "+CMD_DELIMITER),
     color:15575319
   }});
   else if(exports.list().includes(params[0])){
@@ -136,12 +136,12 @@ addCommand("help", "*s", (message, params) => {
     }else{
       message.channel.send({embed:{
         title:"Help Error",
-        description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+        description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type "+CMD_DELIMITER+"help for all default commands.",
         color:10818837
       }});
     }
   }else{
-    message.channel.send("\"" + params[0] + "\" is not a command, type $help for all default commands.");
+    message.channel.send("\"" + params[0] + "\" is not a command, type "+CMD_DELIMITER+"help for all default commands.");
   }
 });
 addCommand("help syntax", "s", (message, params) => {
@@ -159,7 +159,7 @@ addCommand("help syntax", "s", (message, params) => {
     console.log("\"" + best + "\"");
     if(best.length===0) message.channel.send({embed:{
       title:"Help Error",
-      description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+      description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type "+CMD_DELIMITER+"help for all default commands.",
       color:10818837
     }});
     else{
@@ -173,12 +173,12 @@ addCommand("help syntax", "s", (message, params) => {
   }else{
     message.channel.send({embed:{
       title:"Help Error",
-      desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type $help for all default commands.",
+      desctiption:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type "+CMD_DELIMITER+"help for all default commands.",
       color:10818837
     }});
   }
 });
-addCommand("ifeven", "ws", (message, params) => {
+addCommand("ifeven", "w*s", (message, params) => {
   if(/\d/ig.test(params[0])){
     params[0] = parseInt(params[0]);
     message.channel.send(params[0] + " " + (params[0]%2==0 ? "is" : "isn't") + " even!");
@@ -201,9 +201,11 @@ function loadMents(serverID){
     if(!fs.existsSync("./interactivity/content/"+serverID, "UTF8")) fs.mkdir("./interactivity/content/" + serverID);
     fs.open("./interactivity/content/" + serverID + "/ment.json", 'a', (err, file) => {
       if(err) throw err;
-      else console.log("Created new ments for server " + serverID);
+      else{
+        saveMents(serverID, {});
+        console.log("Created new ments for server " + serverID);
+      }
     });
-    saveMents(serverID, {});
     return {};
   }
 }
@@ -221,8 +223,8 @@ addCommand("ment", "w*w", (message, params) => {
     }
     message.channel.send(params[0].toUpperCase() + ": <@" + list.join(">, <@") + ">");
   }
-  else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \"$ment add " + params[0] + " [user]\".")
-  else message.channel.send(params[0] + " is not a mention. Type $ment list for a list of mentions.");
+  else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \""+CMD_DELIMITER+"ment add " + params[0] + " [user]\".")
+  else message.channel.send(params[0] + " is not a mention. Type "+CMD_DELIMITER+"ment list for a list of mentions.");
 });
 addCommand("ment add", "w*s", (message, params) => {
   var ments = loadMents(message.guild.id);
@@ -243,7 +245,7 @@ addCommand("ment add", "w*s", (message, params) => {
       }
     }else{
       //Already exists
-      message.channel.send(params[0] + " is already a mention list. Type \"$ment list\" for a list of mentions.");
+      message.channel.send(params[0] + " is already a mention list. Type \""+CMD_DELIMITER+"ment list\" for a list of mentions.");
     }
   }else if(/<@!?\d{18}>/.test(params[1])){
     //Parse user
@@ -260,7 +262,7 @@ addCommand("ment add", "w*s", (message, params) => {
         message.channel.send("<@" + params[1] + "> is already in " + params[0] + ".");
       }
     }else{
-      message.channel.send(params[0] + " is not a mention list. Type \"$ment list\" for a list of mentions.");
+      message.channel.send(params[0] + " is not a mention list. Type \""+CMD_DELIMITER+"ment list\" for a list of mentions.");
       //Mention does not exist
     }
   }else{
@@ -283,7 +285,7 @@ addCommand("ment remove", "w*s", (message, params) => {
     }
     else{
       //Group does not exist
-      message.channel.send(params[0] + " does not exist. Type \"$ment list\" for a list of mentions.");
+      message.channel.send(params[0] + " does not exist. Type \""+CMD_DELIMITER+"ment list\" for a list of mentions.");
     }
   }else if(/<@!?\d{18}>/.test(params[1])){
     //Remove user
@@ -317,7 +319,7 @@ addCommand("ment random", "", (message, params) => {
 addCommand("ment list", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   if(Object.keys(ments).length>0) message.channel.send("LIST: " + Object.keys(ments).join(", "));
-  else message.channel.send("There are no mention lists. Add some with \"$ment add [name]\".");
+  else message.channel.send("There are no mention lists. Add some with \""+CMD_DELIMITER+"ment add [name]\".");
 });
 
 //Perms
@@ -410,4 +412,7 @@ addCommand("random", "w*w", (message, params) => {
   var out = "";
   while(--i>=0) out += " " + (Math.floor(Math.random()*(high-low+1)+low));
   message.channel.send("Random number from " + low + " to " + high + (params[1] ? " " + params[1] + " times" : "") + ":" + out);
+});
+addCommand("ig", "", (message, params) => {
+  message.channel.send("Don't get the wrong idea... https://www.instagram.com/seasonal.sierra/");
 });
