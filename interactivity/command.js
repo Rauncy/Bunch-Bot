@@ -1,11 +1,14 @@
 "use strict";
 
 const fs = require('fs');
+const Prism = require('prism-media');
+const prism = new Prism();
 
 //Custom Libraries
 const perms = require("./perm.js")
+const {bot} = require('../bot.js');
 
-const CMD_DELIMITER = "plz daddy colton ";
+const CMD_DELIMITER = "$";
 const HELP_DATA = {
   help : {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
@@ -17,7 +20,7 @@ const HELP_DATA = {
   },
   perms : {
     desc : "Allows modification of permissions within the bot. Subcommands: \"allow\", \"revoke\", \"remove\", \"level\", \"test\", and \"raw\"",
-    synt : ["Function", "Target", "Command"]
+    synt : ["Subcommand", "User/Role", "Command"]
   },
   cointoss : {
     desc : "Flips a coin.",
@@ -25,7 +28,23 @@ const HELP_DATA = {
   },
   ment : {
     desc : "Allows mention lists to be added, removed, and modified. Subcommands: \"add\", \"remove\", \"random\", and \"list\".",
-    synt : ["Subcommand", "List", "Target"]
+    synt : ["Subcommand", "List", "User"]
+  },
+  talktome : {
+    desc : "Just a nice little meme that will be turned into a custom command later.",
+    synt : []
+  },
+  dm : {
+    desc : "Direct messages a person. FOR TESTING PURPOSES ONLY! NOT FOR FULL IMPLEMENTATION!",
+    synt : ["User", "Message"]
+  },
+  random : {
+    desc : "Created a random number from the given range.",
+    synt : ["LowerRange-UpperRange", "Count"]
+  },
+  todo : {
+    desc : "Prints a todo list for the developers of me. You can see this too. It is updated as frequently as possible.",
+    synt : []
   }
 };
 exports.DELIMITER = CMD_DELIMITER;
@@ -156,17 +175,29 @@ addCommand("help syntax", "s", (message, params) => {
     Object.keys(HELP_DATA).forEach(val => {
       if(params[0].startsWith(val) && val.length>best.length) best=val;
     });
-    console.log("\"" + best + "\"");
     if(best.length===0) message.channel.send({embed:{
       title:"Help Error",
       description:CMD_DELIMITER + params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase() + " is not a command, type "+CMD_DELIMITER+"help for all default commands.",
       color:10818837
     }});
     else{
+      var data = "";
+      var list = HELP_DATA[best.toLowerCase()].synt;
+      var notation = "[]";
       //TODO splice already given paramaters
+      list.splice(0, params[0].split(" ").length - best.split(" ").length);
+      for(var i = 0;i<list.length;i++){
+        if(i<commands[params[0]].param.length && commands[params[0]].param.charAt(i)==="*"){
+          notation = "()"
+        }
+        data += " " + notation.charAt(0) + list[i] + notation.charAt(1);
+      }
       message.channel.send({embed:{
+        fields:[{
+          "name" : "Syntax: [argument] is a required argument. (argument) is an optional argument",
+          "value" : CMD_DELIMITER + params[0].toLowerCase() + data
+      }],
         title:"Syntax of " + params[0].toLowerCase(),
-        description:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best.toLowerCase()].synt.join("] [") + "]",
         color:15575319
       }});
     }
@@ -210,7 +241,7 @@ function loadMents(serverID){
   }
 }
 
-function isID(s){return s.test(/\d{18}/)}
+function isID(s){return s.test(/<@!?\d{18}>/)}
 
 addCommand("ment", "w*w", (message, params) => {
   //data goes in ./content/[serverid]/ment.json
@@ -218,10 +249,38 @@ addCommand("ment", "w*w", (message, params) => {
   params[0] = params[0].toLowerCase();
   if(ments[params[0]] && ments[params[0]].length>0){
     var list = ments[params[0]];
+    if(list.includes(message.author.id)) list.splice(list.indexOf(message.author.id), 1);
     if(params[1]){
-
+      var templist = [];
+      switch(params[1].toLowerCase()){
+        case "online":
+          //Only people online
+          list.forEach(val => {
+            if(bot.users.has(val) && bot.users.get(val).presence.status != "offline") templist.push(val);
+          });
+          break;
+        case "offline":
+          //Only people offline
+          list.forEach(val => {
+            if(bot.users.has(val) && bot.users.get(val).presence.status == "offline") templist.push(val);
+          });
+          break;
+        case "here":
+        //TODO
+          //Only people in chat
+          break;
+        default:
+          message.channel.send(params[1] + " is not a valid identifier for mentions.\nValid identifiers: \"online\", and \"offline\"");
+          //Makes so the nobody from message doesn't display
+          templist = list;
+          break;
+      }
+      if(templist.length===0){
+        message.channel.send("Nobody from the " + params[0].toLowerCase() + " group is " + params[1].toLowerCase() + ".\nPlease try a different descriptor or none at all.\nMentioning all of " + params[0].toLowerCase());
+      }else list = templist;
     }
-    message.channel.send(params[0].toUpperCase() + ": <@" + list.join(">, <@") + ">");
+    if(templist && templist.length===0) message.channel.send("Only you are in this mention group. Please add more people for the mention group to work properly.");
+    else message.channel.send(params[0].toUpperCase() + ": <@" + list.join(">, <@") + ">");
   }
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \""+CMD_DELIMITER+"ment add " + params[0] + " [user]\".")
   else message.channel.send(params[0] + " is not a mention. Type "+CMD_DELIMITER+"ment list for a list of mentions.");
@@ -281,7 +340,7 @@ addCommand("ment remove", "w*s", (message, params) => {
     //Remove group
     if(ments[params[0]]){
       delete ments[params[0]];
-      message.channel.send(params[0] + " was deleted from the mentions.");
+      message.channel.send(params[0] + " was removed from the mentions.");
     }
     else{
       //Group does not exist
@@ -289,7 +348,6 @@ addCommand("ment remove", "w*s", (message, params) => {
     }
   }else if(/<@!?\d{18}>/.test(params[1])){
     //Remove user
-    console.log()
     params[1]=params[1].match(/<@!?(\d{18})>/)[1];
     if(ments[params[0]]){
       //List exists
@@ -314,6 +372,7 @@ addCommand("ment remove", "w*s", (message, params) => {
 addCommand("ment random", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   var choice = Object.keys(ments)[Math.floor(Math.random()*Object.keys(ments).length)];
+  exports.runCommand();
   message.channel.send(choice.toUpperCase() + ": <@" + ments[choice].join(">, <@") + ">");
 });
 addCommand("ment list", "", (message, params) => {
@@ -366,37 +425,8 @@ addCommand("perms raw", "", (message, params) => {
 addCommand("cointoss", "", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)==0) ? "heads" : "tails") + ".");
 });
-addCommand("test", "", (message, params) => {
-  message.channel.send({embed:{
-    color:15266882,
-    title:"Test",
-    description:"Dankerino"
-  }});
-});
 addCommand("talktome", "", (message, params) => {
   message.channel.send("Talk to the tome " + message.author,{files:["https://vignette.wikia.nocookie.net/darksouls/images/9/90/Braille_Divine_Tome_of_Carim.png"]});
-});
-addCommand("silencio", "", (message, params) => {
-  let m = require("../bot.js");
-  m.silenceDaBoi = !m.silenceDaBoi;
-  message.channel.send("Silencio " + (m.silenceDaBoi ? "" : "de") + "activato.");
-});
-addCommand("join", "", (message, params) => {
-  if(message.member.voiceChannel) message.member.voiceChannel.join().then(con => {
-    console.log("Connected");}).catch((err)=>{
-      console.log(err);
-    });
-});
-addCommand("randompin", "s", (message, params) => {
-  if(message.channel.type=="text"){
-    var mat = params[0].match(/(\d{18})/ig)[0];
-    if(mat && message.guild.channels.has(mat)){
-      message.guild.channels.get(mat).fetchPinnedMessages().then(res => {
-        if(res.array().length>0) message.channel.send("Random pin: " + res.array()[Math.floor(Math.random()*res.array().length)]);
-        else message.channel.send("This channel has no pins!");
-      });
-    }else message.channel.send(params[0] + " is not a valid channel.");
-  }else message.channel.send("Please give me a server chat.");
 });
 addCommand("dm", "ws", (message, params) => {
   let uid = params[0].match(/\d{18}/)[0];
@@ -413,6 +443,155 @@ addCommand("random", "w*w", (message, params) => {
   while(--i>=0) out += " " + (Math.floor(Math.random()*(high-low+1)+low));
   message.channel.send("Random number from " + low + " to " + high + (params[1] ? " " + params[1] + " times" : "") + ":" + out);
 });
-addCommand("ig", "", (message, params) => {
-  message.channel.send("Don't get the wrong idea... https://www.instagram.com/seasonal.sierra/");
+addCommand("todo", "", (message, params) => {
+  if(fs.existsSync("./todo.txt", "UTF-8")){
+    fs.readFile("./todo.txt", "UTF-8", (err, data) => {
+      message.channel.send("TODO:\n" + data);
+    });
+  }else{
+    message.channel.send("TODO file not found. Ask <@185192156489580544> for info on this situation.");
+  }
+});
+//Poll Name, Message, Options
+addCommand("poll", "", (message, params) => {
+  message.channel.send("WIP");
+});
+addCommand("recommend", "s", (message, params) => {
+  params[0] = params[0].trim();
+  if(fs.existsSync("./todo.txt")){
+    var items = fs.readFileSync("./todo.txt", "UTF-8").split("\n");
+    for(var i=0;i<items.length;i++){
+      items[i] = items[i].charAt(0).toUpperCase() + items[i].substring(1).toLowerCase();
+    }
+    if(items.includes(params[0].toLowerCase())){
+      messae.channel.send("This item is already in the list.\nPlease submit again with an original idea.\nHowever; there are no original ideas...");
+    }else{
+      items.push(params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase());
+      fs.writeFile("./todo.txt", items.join("\n"), err => {
+        if(err){
+          message.channel.send("Ok it didn't work but idk wtf happened.");
+        }else{
+          message.channel.send("Your suggestion was added to the end of the list!");
+        }
+      });
+    }
+  }else{
+    message.channel.send("The TODO file does not exist. Please contact the host of the bot <@185192156489580544>.");
+  }
+});
+addCommand("arg", "", (message, params) => {
+  message.channel.send("If you want, take a crack: 1110001000100010001000100010001000100000000000100000110000100010001000010011000");
+});
+addCommand("anthem", "*w", (message, params) => {
+  if(params[0]){
+    switch(params[0].toLowerCase()){
+      case "english":
+      case "espanol":
+      case "español":
+      case "deutch":
+      case "nederland":
+      case "francais":
+      case "german":
+      case "french":
+      case "dutch":
+      case "spanish":
+        message.channel.send({embed:{
+          title : "All hail red bretheren! Romanized Version",
+          fields : [
+            {
+              name : "Verse 1",
+              value : "Soiuz nerushimyj respublik svobodnykh, Splotila naveki Velikaia Rus. Da zdravstvuet sozdannyj volej narodov, Edinyj, moguchij Sovetskij Soiuz!"
+            },
+            {
+              name : "Verse 2",
+              value : "Slavsia, Otechestvo nashe svobodnoe, Druzhby narodov nadiozhnyj oplot! Partiia Lenina - sila narodnaia, Nas k torzhestvu kommunizma vediot!"
+            },
+            {
+              name : "Verse 3",
+              value : "Skvoz grozy siialo nam solntse svobody, I Lenin velikij nam put ozaril, Na pravoe delo on podnial narody, Na trud i na podvigi nas vdokhnovil."
+            },
+            {
+              name : "Verse 4",
+              value : "Slavsia, Otechestvo nashe svobodnoe, Druzhby narodov nadiozhnyj oplot! Partiia Lenina - sila narodnaia, Nas k torzhestvu kommunizma vediot!"
+            },
+            {
+              name : "Verse 5",
+              value : "V pobede bessmertnykh idej kommunizma, My vidim griadushchee nashej strany, I Krasnomu znameni slavnoj Otchizny, My budem vsegda bezzavetno verny!"
+            },
+            {
+              name : "Verse 6",
+              value : "Slavsia, Otechestvo nashe svobodnoe, Druzhby narodov nadiozhnyj oplot! Partiia Lenina - sila narodnaia, Nas k torzhestvu kommunizma vediot!"
+            }
+          ],
+          color : 16711680
+        }});
+        break;
+    }
+  }else
+  message.channel.send({embed:{
+    title : "All hail red bretheren!",
+    fields : [
+      {
+        name : "Verse 1",
+        value : "Союз нерушимый республик свободных,Сплотила навеки Великая Русь. Да здравствует созданный волей народов, Единый, могучий Советский Союз!"
+      },
+      {
+        name : "Verse 2",
+        value : "Славься, Отечество наше свободное, Дружбы народов надёжный оплот! Партия Ленина - сила народная, Нас к торжеству коммунизма ведёт!"
+      },
+      {
+        name : "Verse 3",
+        value : "Сквозь грозы сияло нам солнце свободы, И Ленин великий нам путь озарил, На правое дело он поднял народы, На труд и на подвиги нас вдохновил."
+      },
+      {
+        name : "Verse 4",
+        value : "Славься, Отечество наше свободное, Дружбы народов надёжный оплот! Партия Ленина - сила народная, Нас к торжеству коммунизма ведёт!"
+      },
+      {
+        name : "Verse 5",
+        value : "В победе бессмертных идей коммунизма, Мы видим грядущее нашей страны, И Красному знамени славной Отчизны, Мы будем всегда беззаветно верны!"
+      },
+      {
+        name : "Verse 6",
+        value : "Славься, Отечество наше свободное, Дружбы народов надёжный оплот! Партия Ленина - сила народная, Нас к торжеству коммунизма ведёт!"
+      }
+    ],
+    color : 16711680
+  }});
+});
+addCommand("join", "", (message, params) => {
+  var cVoz = message.member.voiceChannel
+  if(cVoz){
+    message.channel.send("Attempting to join " + cVoz.name + ".");
+    cVoz.join().then(conn => {
+      console.log(fs.existsSync("./interactivity/temp/musicCache/test.mp3"));
+      const broadcast = bot.createVoiceBroadcast();
+      broadcast.playFile("./interactivity/temp/musicCache/test.mp3");
+      conn.playBroadcast(broadcast);
+    }).catch(err => {
+      console.error(err);
+    });
+  }
+  else message.channel.send("You must be in a voice chat to join!");
+});
+addCommand("leave", "", (message, params) => {
+  var chan = message.guild.member(bot.user.id).voiceChannel
+  if(chan){
+    chan.leave();
+    message.channel.send("Left " + chan.name);
+  }
+  else message.channel.send("I am not in a voice channel");
+});
+addCommand("silence", "w", (message, params) => {
+  if(/<@!?\d{18}>/.test(params[0])){
+
+  }else{
+
+  }
+});
+addCommand("clear", "", (message, params) => {
+  var m = message.channel.messages;
+  m.forEach(val => {
+    if(val.author.id === bot.id) val.delete();
+  });
 });
