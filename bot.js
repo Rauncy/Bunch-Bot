@@ -15,7 +15,7 @@ bot.on('ready', () => {
   bot.user.setPresence({
     status:"dnd",
     game:{
-      name:"THX Intro",
+      name:"your requests",
       type:"LISTENING"
     }
   });

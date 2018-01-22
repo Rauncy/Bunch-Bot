@@ -1,7 +1,7 @@
 #Files with actual user data and private info pertaining to the bot and other users.
-*.json
+interactivity/content/*
 logs/*
+info.json
 
 #Extraneous files
-node_modules/*
 *.bat
