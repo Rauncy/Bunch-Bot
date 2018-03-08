@@ -1,14 +1,15 @@
-"use strict";
+﻿"use strict";
 
 const fs = require('fs');
 const Prism = require('prism-media');
 const prism = new Prism();
 
 //Custom Libraries
+const {globals, perms} = require();
 const perms = require("./perm.js")
 const {bot} = require('../bot.js');
 
-const CMD_DELIMITER = "$";
+const CMD_DELIMITER = ".";
 const HELP_DATA = {
   help : {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",

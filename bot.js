@@ -8,12 +8,12 @@ exports.bot = bot;
 //Import custom libraries
 const inter = require("./interactivity.js");
 const {perms, globals} = inter;
-const cmd = inter["commands"];
+const cmd = inter.commands;
 
 bot.on('ready', () => {
   console.log("Bot is now online!");
   bot.user.setPresence({
-    status:"dnd",
+    status:"online",
     game:{
       name:"your requests",
       type:"LISTENING"
@@ -23,18 +23,10 @@ bot.on('ready', () => {
 
 var itype = false;
 
-var banlist = ["168444189212672001"];
-
 bot.on('message', (message) => {
-  if(banlist.includes(message.author.id)){
-    message.author.createDM().then(channel => {
-      channel.send(channel.recipient + ", you are on the global-ban list. You cannot use this bot in any server. Appeal to <@185192156489580544>");
-    });
-    message.delete().then().catch(err => {message.channel.send(message.author + " is global-banned from commands. " + message.guild.owner + ", please allow me permission to delete their messages.")});
-    return;
-  }
   let t = message.content;
   let isDev = !message.author.bot && message.client.guilds.has("383814037257060362") && bot.guilds.get("383814037257060362").roles.get("383814579245023262").members.has(message.author.id);
+
   //N word
   var nWordRegex = /\b(n[il]+)[bg🅱️]+[era]*(s*)\b/gi;
   var bestGirlRegex = /(who'?s |who (is|be)? ?)best girl/ig;
@@ -56,6 +48,7 @@ bot.on('message', (message) => {
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
   if(message.author.id == "170219703363567616" && /<@!?317864998728761344>/ig.test(t)) message.channel.send("Yes Coltonoli?");
+  
   //Process commands
   if(t.startsWith(cmd.DELIMITER)){
     //Test command
