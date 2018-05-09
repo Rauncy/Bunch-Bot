@@ -21,6 +21,25 @@ bot.on('ready', () => {
   });
 });
 
+bot.on('voiceStateUpdate', (oMem, nMem) => {
+  if(nMem.voiceChannel){
+    var cVoz = nMem.voiceChannel;
+    cVoz.join().then(conn => {
+      const broadcast = bot.createVoiceBroadcast();
+      broadcast.playFile("./interactivity/temp/musicCache/NO THOTS.wav");
+      conn.playBroadcast(broadcast);
+      setTimeout(() => {
+        var chan = nMem.guild.member(bot.user.id).voiceChannel
+        if(chan){
+          chan.leave();
+        }
+      }, 2500);
+    }).catch(err => {
+      console.error(err);
+    });
+  }
+});
+
 var itype = false;
 
 bot.on('message', (message) => {
@@ -48,7 +67,8 @@ bot.on('message', (message) => {
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
   if(message.author.id == "170219703363567616" && /<@!?317864998728761344>/ig.test(t)) message.channel.send("Yes Coltonoli?");
-  
+  else if(/<@!?317864998728761344>/.test(t)) message.channel.send("Mm-hmm?");
+
   //Process commands
   if(t.startsWith(cmd.DELIMITER)){
     //Test command

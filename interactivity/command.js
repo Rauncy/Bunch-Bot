@@ -5,8 +5,7 @@ const Prism = require('prism-media');
 const prism = new Prism();
 
 //Custom Libraries
-const {globals, perms} = require();
-const perms = require("./perm.js")
+const {globals, perms} = require("../interactivity.js");
 const {bot} = require('../bot.js');
 
 const CMD_DELIMITER = ".";
@@ -15,13 +14,17 @@ const HELP_DATA = {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
     synt : ["Command Name"]
   },
+  "help syntax" : {
+    desc: "Tells you what to put and where to put it.",
+    synt : ["Command Name"]
+  },
   ifeven : {
     desc : "Tests if a number is even or not because I can't use CJ's bot :(",
     synt : ["Number"]
   },
   perms : {
     desc : "Allows modification of permissions within the bot. Subcommands: \"allow\", \"revoke\", \"remove\", \"level\", \"test\", and \"raw\"",
-    synt : ["Subcommand", "User/Role", "Command"]
+    synt : ["Subcommand", "User/Role", "Command/Feature"]
   },
   cointoss : {
     desc : "Flips a coin.",
@@ -29,7 +32,7 @@ const HELP_DATA = {
   },
   ment : {
     desc : "Allows mention lists to be added, removed, and modified. Subcommands: \"add\", \"remove\", \"random\", and \"list\".",
-    synt : ["Subcommand", "List", "User"]
+    synt : ["Subcommand/Group", "List", "User"]
   },
   talktome : {
     desc : "Just a nice little meme that will be turned into a custom command later.",
@@ -149,8 +152,8 @@ addCommand("help", "*s", (message, params) => {
     if(best.length>0){
       //TODO splice already given paramaters
       message.channel.send({embed:{
-        title:"Syntax of " + params[0].toLowerCase(),
-        description:CMD_DELIMITER + params[0].toLowerCase() + " [" + HELP_DATA[best].synt.join("] [") + "]",
+        title:"Help for " + params[0].toLowerCase(),
+        description:HELP_DATA[params[0].toLowerCase()].desc,
         color:15575319
       }});
     }else{
@@ -559,29 +562,6 @@ addCommand("anthem", "*w", (message, params) => {
     ],
     color : 16711680
   }});
-});
-addCommand("join", "", (message, params) => {
-  var cVoz = message.member.voiceChannel
-  if(cVoz){
-    message.channel.send("Attempting to join " + cVoz.name + ".");
-    cVoz.join().then(conn => {
-      console.log(fs.existsSync("./interactivity/temp/musicCache/test.mp3"));
-      const broadcast = bot.createVoiceBroadcast();
-      broadcast.playFile("./interactivity/temp/musicCache/test.mp3");
-      conn.playBroadcast(broadcast);
-    }).catch(err => {
-      console.error(err);
-    });
-  }
-  else message.channel.send("You must be in a voice chat to join!");
-});
-addCommand("leave", "", (message, params) => {
-  var chan = message.guild.member(bot.user.id).voiceChannel
-  if(chan){
-    chan.leave();
-    message.channel.send("Left " + chan.name);
-  }
-  else message.channel.send("I am not in a voice channel");
 });
 addCommand("silence", "w", (message, params) => {
   if(/<@!?\d{18}>/.test(params[0])){
