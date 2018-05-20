@@ -21,8 +21,9 @@ bot.on('ready', () => {
   });
 });
 
+/*
 bot.on('voiceStateUpdate', (oMem, nMem) => {
-  if(nMem.voiceChannel){
+  if(nMem.id == "" && nMem.voiceChannel){
     var cVoz = nMem.voiceChannel;
     cVoz.join().then(conn => {
       const broadcast = bot.createVoiceBroadcast();
@@ -39,6 +40,7 @@ bot.on('voiceStateUpdate', (oMem, nMem) => {
     });
   }
 });
+*/
 
 var itype = false;
 
@@ -66,8 +68,10 @@ bot.on('message', (message) => {
   //if(!message.author.bot && t.includes("<:Binking:403597251760357396>")) message.channel.send("Did you mean:", {files: ["http://i0.kym-cdn.com/photos/images/original/001/256/183/9d5.png"]});
   //Print DMs
   if(message.channel.type == "dm") console.log(message.author.username + ": " + t);
-  if(message.author.id == "170219703363567616" && /<@!?317864998728761344>/ig.test(t)) message.channel.send("Yes Coltonoli?");
-  else if(/<@!?317864998728761344>/.test(t)) message.channel.send("Mm-hmm?");
+  if(/<@!?317864998728761344>/ig.test(t)){
+    if(message.author.id == "170219703363567616") message.channel.send("Yes Coltonoli?");
+    else message.channel.send("Mm-hmm?");
+  }
 
   //Process commands
   if(t.startsWith(cmd.DELIMITER)){
@@ -79,11 +83,22 @@ bot.on('message', (message) => {
     });
     console.log("Command: " + cor);
     if(cor.length>0){
-      if(message.channel.type == "text"){
-        if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
-        if(perms.hasPermission(message.author.id, cmd.DELIMITER + cor, message.guild) || isDev) cmd.runCommand(cor, message);
-        else message.channel.send("You do not have access to this command " + message.author);
-      }else cmd.runCommand(cor, message);
+      try{
+        if(message.channel.type == "text"){
+          if(!perms.isLoaded(message.guild)) perms.loadPerms(message.guild);
+          if(perms.hasPermission(message.author.id, cmd.DELIMITER + cor, message.guild) || isDev) cmd.runCommand(cor, message);
+          else message.channel.send("You do not have access to this command " + message.author);
+        }else{
+          cmd.runCommand(cor, message);
+        }
+      }catch(err){
+        message.guild.members.get("185192156489580544").createDM().then(c => {
+          c.send("An error occured while executing \""+cor+"\" with the content \""+message.content+"\"");
+        });
+        message.channel.send("An error occured while executing "+cmd.DELIMITER+cor+". An error report was submitted.");
+        console.error(err);
+      }
+
     }else{
       message.channel.send("\"" + t.substring(cmd.DELIMITER.length,(t.indexOf(" ")!=-1 ? t.indexOf(" ") : t.length)) + "\" is not a command. Type \"" + cmd.DELIMITER + "help\" for all default commands.");
     }

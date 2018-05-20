@@ -8,7 +8,7 @@ const prism = new Prism();
 const {globals, perms} = require("../interactivity.js");
 const {bot} = require('../bot.js');
 
-const CMD_DELIMITER = ".";
+const CMD_DELIMITER = "$";
 const HELP_DATA = {
   help : {
     desc : "Tells you how to use commands. If you are seeing this you know how to use this command.",
@@ -127,12 +127,13 @@ exports.list = function(){
 };
 
 exports.runCommand = function(name, message){
+  console.log("C: " + name + " M: " + message.content);
   var pars = separateParams(name, message.content);
   if(commands[name]){
     if(pars.length>=(commands[name].param.includes("*") ? commands[name].param.indexOf("*") : commands[name].param.length)){
       commands[name].run(message, separateParams(name, message.content));
     }else{
-      message.channel.send("You did not meet all the paramaters for " + name + ". Use "+CMD_DELIMITER+"help syntax [command] for formatting");
+      message.channel.send("You did not meet all the paramaters for " + name + ". Use *"+CMD_DELIMITER+"help syntax "+name+"* for formatting");
     }
   }
 };
@@ -289,6 +290,7 @@ addCommand("ment", "w*w", (message, params) => {
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \""+CMD_DELIMITER+"ment add " + params[0] + " [user]\".")
   else message.channel.send(params[0] + " is not a mention. Type "+CMD_DELIMITER+"ment list for a list of mentions.");
 });
+//TODO SWITCH FORMAT OF PARAMATERS
 addCommand("ment add", "w*s", (message, params) => {
   var ments = loadMents(message.guild.id);
   params[0]=params[0].toLowerCase();
@@ -337,6 +339,7 @@ addCommand("ment add", "w*s", (message, params) => {
   }
   saveMents(message.guild.id, ments);
 });
+//TODO SWITCH FORMAT OF PARAMATERS
 addCommand("ment remove", "w*s", (message, params) => {
   var ments = loadMents(message.guild.id);
   params[0]=params[0].toLowerCase();
@@ -373,12 +376,50 @@ addCommand("ment remove", "w*s", (message, params) => {
   }
   saveMents(message.guild.id, ments);
 });
+//TODO FIX
 addCommand("ment random", "", (message, params) => {
   var ments = loadMents(message.guild.id);
-  var choice = Object.keys(ments)[Math.floor(Math.random()*Object.keys(ments).length)];
-  exports.runCommand();
-  message.channel.send(choice.toUpperCase() + ": <@" + ments[choice].join(">, <@") + ">");
+  if(ments != {}){
+    var choice = Math.floor(Math.random()*Object.keys(ments).length);
+    var list = Object.values(ments)[choice];
+    message.channel.send("Random ment \""+Object.keys(ments)[choice]+"\": <@"+ list.join(">, <@") + ">");
+  }else{
+    message.channel.send({embed:{
+      description:"There are no mentions. Add some using "+CMD_DELIMITER+"ment add [name].",
+      title:"Mention Error",
+      color:10818837
+    }});
+  }
+
 });
+addCommand("ment bestfit", "", (message, params) => {
+  if(message.member.voiceChannel){
+    var ments = loadMents(message.guild.id);
+    var active = message.member.voiceChannel.members;
+    var best, grade, bestGrade = Number.MIN_SAFE_INTEGER;
+    Object.keys(ments).forEach((n) => {
+      var i = ments[n];
+      grade = 0;
+      console.log(i);
+      active.forEach((j) => {
+        if(i.includes(j.id)) grade+=5;
+        else grade--;
+      });
+      if(grade>bestGrade){
+        best = n;
+        bestGrade = grade;
+      }
+    });
+    message.channel.send("Best fitting \""+best+"\": <@" + ments[best].join("> <@") + ">");
+  }else{
+    message.channel.send({embed:{
+      description:"You must be in a voice channel to use bestfit!",
+      title:"Mention Error",
+      color:10818837
+    }});
+  }
+});
+//TODO RICH EMBED NEEDS TO BE ADDDED
 addCommand("ment list", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   if(Object.keys(ments).length>0) message.channel.send("LIST: " + Object.keys(ments).join(", "));
