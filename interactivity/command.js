@@ -397,7 +397,8 @@ addCommand("ment bestfit", "", (message, params) => {
     var best, grade, bestGrade = Number.MIN_SAFE_INTEGER;
     Object.keys(ments).forEach((n) => {
       var i = ments[n];
-      grade = -n.length;
+      grade = -i.length;
+      console.log(i);
       active.forEach((j) => {
         if(i.includes(j.id)) grade+=5;
         else grade--;
@@ -407,7 +408,7 @@ addCommand("ment bestfit", "", (message, params) => {
         bestGrade = grade;
       }
     });
-    message.channel.send("Best fitting ment \""+best+"\": <@" + ments[best].join("> <@") + ">");
+    message.channel.send("Best fitting \""+best+"\": <@" + ments[best].join("> <@") + ">");
   }else{
     message.channel.send({embed:{
       description:"You must be in a voice channel to use bestfit!",
