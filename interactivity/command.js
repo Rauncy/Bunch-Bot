@@ -1,8 +1,6 @@
 ﻿"use strict";
 
 const fs = require('fs');
-const Prism = require('prism-media');
-const prism = new Prism();
 
 //Custom Libraries
 const {globals, perms} = require("../interactivity.js");
