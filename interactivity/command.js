@@ -303,7 +303,7 @@ function loadMents(serverID){
 
 function isID(s){return s.test(/<@!?\d{18}>/)}
 
-addCommand("ment", "s*w", (message, params) => {
+addCommand("ment", "w*w", (message, params) => {
   //data goes in ./content/[serverid]/ment.json
   var ments = loadMents(message.guild.id);
   params[0] = params[0].toLowerCase();
@@ -403,7 +403,7 @@ addCommand("ment add", "w*w", (message, params) => {
   saveMents(message.guild.id, ments);
 });
 //TODO SWITCH FORMAT OF PARAMATERS
-addCommand("ment remove", "w*s", (message, params) => {
+addCommand("ment remove", "w*w", (message, params) => {
   var ments = loadMents(message.guild.id);
   params[0]=params[0].toLowerCase();
   if(!params[1]){
@@ -439,7 +439,7 @@ addCommand("ment remove", "w*s", (message, params) => {
   }
   saveMents(message.guild.id, ments);
 });
-//TODO FIX
+
 addCommand("ment random", "", (message, params) => {
   var ments = loadMents(message.guild.id);
   if(ments != {}){
@@ -553,6 +553,7 @@ addCommand("perms raw", "", (message, params) => {
 addCommand("coin", "", (message, params) => {
   message.channel.send("It's " + ((Math.floor(Math.random()*2)===0) ? "heads" : "tails") + ".");
 });
+
 addCommand("random", "w*w", (message, params) => {
   var low = params[0].split("-");
   var high = parseInt(low[1]);
@@ -561,71 +562,6 @@ addCommand("random", "w*w", (message, params) => {
   var out = "";
   while(--i>=0) out += " " + (Math.floor(Math.random()*(high-low+1)+low));
   message.channel.send("Random number from " + low + " to " + high + (params[1] ? " " + params[1] + " times" : "") + ":" + out);
-});
-addCommand("todo", "", (message, params) => {
-  if(fs.existsSync("./todo.txt", "UTF-8")){
-    fs.readFile("./todo.txt", "UTF-8", (err, data) => {
-      message.channel.send("TODO:\n" + data);
-    });
-  }else{
-    message.channel.send("TODO file not found. Ask <@185192156489580544> for info on this situation.");
-  }
-});
-
-var polls = {};
-
-//Poll Name, Message, Options
-addCommand("poll create", "s", (message, params) => {
-  //GUILD SEC EXIST
-  if(!polls[message.guild.id]){
-    polls[message.guild.id] = {};
-  }
-  //POLL ORIGINAL
-  if(!polls[message.guild.id][params[0]]){
-    polls[message.guild.id][params[0]] = undefined;
-
-  }else{
-    message.channel.send("Your poll already exists or is in the process of being created.");
-  }
-});
-addCommand("recommend", "s", (message, params) => {
-  params[0] = params[0].trim();
-  if(fs.existsSync("./todo.txt")){
-    var items = fs.readFileSync("./todo.txt", "UTF-8").split("\n");
-    for(var i=0;i<items.length;i++){
-      items[i] = items[i].charAt(0).toUpperCase() + items[i].substring(1).toLowerCase();
-    }
-    if(items.includes(params[0].toLowerCase())){
-      messae.channel.send("This item is already in the list.\nPlease submit again with an original idea.\nHowever; there are no original ideas...");
-    }else{
-      items.push(params[0].charAt(0).toUpperCase() + params[0].substring(1).toLowerCase());
-      fs.writeFile("./todo.txt", items.join("\n"), err => {
-        if(err){
-          message.channel.send("Ok it didn't work but idk wtf happened.");
-        }else{
-          message.channel.send("Your suggestion was added to the end of the list!");
-        }
-      });
-    }
-  }else{
-    message.channel.send("The TODO file does not exist. Please contact the host of the bot <@185192156489580544>.");
-  }
-});
-addCommand("arg", "", (message, params) => {
-  message.channel.send("If you want, take a crack: 1110001000100010001000100010001000100000000000100000110000100010001000010011000");
-});
-addCommand("silence", "ww", (message, params) => {
-  if(/<@!?\d{18}>/.test(params[0])){
-
-  }else{
-
-  }
-});
-addCommand("clear", "", (message, params) => {
-  var m = message.channel.messages;
-  m.forEach(val => {
-    if(val.author.id === bot.id) val.delete();
-  });
 });
 
 var isSleeping = [];
@@ -646,111 +582,8 @@ addCommand("sleep", "", (message, params) => {
   }
 });
 
-//PENDING DUELS ARE DUELS THAT HAVE BEEN DECLARED BUT NOT ACCEPTED OR DENIED
-//ACTIVE DUELS HAS A KEY ALONG WITH DUEL INFORMATION
-//CURRENT PLAYERS HAS PLAYERS MATCHED WITH THEIR CURRENT DUEL KEY
-var pendingDuels = {};
-var activeDuels = {};
-var currentPlayers = {};
-var duelTypes = {
-  "rock paper scissors" : {"name" : "rock paper scissors", "validresp" : ["rock", "paper", "scissors"]},
-  "rock paper scissors lizard spock" : {"name" : "rock paper scissors lizard spock", "validresp" : ["rock", "paper", "scissors", "lizard", "spock"]}
-};
-addCommand("duel", "w*w", (message, params) => {
-  if(/<@!?(\d{18})>/ig.test(params[0])){
-    var uid = message.author.id;
-    var cid = params[0].match(/<@!?(\d{18})>/)[1];
-    if(!pendingDuels[uid]) pendingDuels[uid] = {};
-
-    if(params[1] && Object.keys(duelTypes).includes(params[1])){
-      //TYPE LOGGED
-      console.log("|DEBUG| Under "+uid+" and "+cid+" : \""+params[1]+"\" was saved.");
-      pendingDuels[uid][cid] = params[1];
-    }else{
-      pendingDuels[uid][cid] = Object.keys(duelTypes)[Math.floor(Math.random()*Object.keys(duelTypes).length)];
-      console.log("|DEBUG| Under "+uid+" and "+cid+" : \""+pendingDuels[uid][cid]+"\" was saved.");
-      if(params[1]){
-        message.channel.send("There is no duel type named \""+params[1]+"\". Instead \""+pendingDuels[uid][cid]+"\" was chosen. If you wish to reconcile this, reduel your target with a valid challenge from " + CMD_DELIMITER + "duel list.");
-      }
-    }
-  }
-});
-//CR is challenger CD is challenged
-function startDuel(cr, cd){
-  console.log("|DEBUG| New duel with cr "+cr+" and cd "+cd);
-  if(!activeDuels[cr]) activeDuels[cr] = {};
-
-  activeDuels[cr][cd] = pendingDuels[cr][cd];
-  delete pendingDuels[cr][cd];
-
-  currentPlayers.push(cr);
-  currentPlayers.push(cd);
-
-  bot.guilds.get('182693821153411072').channels.get('375846593204846602').send("|DEBUG| Duel type: " + activeDuels[cr][cd]);
-
-  console.log("FIN");
-}
-
-function processDuel(message){
-  let type = currentPlayers[message.author.id].name;
-}
-addCommand("duel accept", "*w", (message, params) => {
-  var uid = message.author.id;
-  if(!params[0]){
-    //0 PARAMS
-    let guildMembers = message.guild.members;
-    let relChal = {};
-    let keys = guildMembers.keyArray();
-    console.log("AD: "+JSON.stringify(pendingDuels));
-    keys.forEach((val) => {
-      console.log("|DEBUG| V: "+val);
-      if(pendingDuels[val] && pendingDuels[val][uid]){
-        relChal[val] = pendingDuels[val][uid];
-        console.log(pendingDuels[val][uid]+" v "+val+" id "+uid);
-      }
-    });
-    if(Object.keys(relChal).length>1){
-      message.channel.send("You have multiple duels. Please retry by mentioning the person you would like to accept.");
-    }else if(Object.keys(relChal).length===1){
-      startDuel(Object.keys(relChal)[0], uid);
-    }else{
-      message.channel.send("Noone has dueled you from this server. Start a duel with "+CMD_DELIMITER+"duel [name].");
-    }
-  }else if(/<@!?\d{18}>/.test(params[0])){
-    let cid = params[0].match(/<@!?(\d{18})>/)[1];
-    if(pendingDuels[uid][cid]) startDuel(cid, uid);
-    else message.channel.send("There is no active duel from that person; however, you may start a duel.");
-  }else{
-    message.channel.send("Please mention the name of the person you are trying to accept a duel from.");
-  }
-});
-addCommand("duel types", "", (message, params) => {
-  message.channel.send("Types: "+duelTypes.join(", "));
-});
-addCommand("duel decline", "*w", (message, params) => {
-  var uid = message.author.id;
-  if(!params[0]){
-    let guildMembers = message.guild.members;
-    let relChal = {};
-    guildMembers.forEach((val) => {
-      if(pendingDuels[uid][val.id]) relChal[val.id] = pendingDuels[uid][val.id];
-    });
-    if(Object.keys(relChal).length>1){
-      message.channel.send("You have multiple duels. Please retry by mentioning the person you would like to decline.");
-    }else if(Object.keys(relChal).length===1){
-      delete pendingDuels[Object.keys(relChal)[0]][uid];
-      message.channel.send("<@"+uid+"> has declined a duel from <@"+Object.keys(relChal)[0]+">");
-      // startDuel(relChal[0], uid);
-    }else{
-      messsage.channel.send("Noone has dueled you from this server.");
-    }
-  }else if(/<@!?\d{18}>/.test(params[0])){
-    let cid = params[0].match(/<@!?(\d{18})>/)[1];
-    if(pendingDuels[uid][cid]) delete pendingDuels[uid][cid];
-    else message.channel.send("There is no active duel from that person.");
-  }else{
-    message.channel.send("Please mention the name of the person you are trying to decline a duel from.");
-  }
+addCommand("about", "", (message, params)=>{
+  message.channel.send("Bunch Bot is an interactive tool for Discord messenger that provides simple features for server managment, maintainance, and automation. Current version: v1 (Closed Private Alpha)");
 });
 
 bot.on("message", (message) => {
