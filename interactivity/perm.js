@@ -25,7 +25,7 @@ exports.loadPerms = function(server){
   if(!fs.existsSync(`./interactivity/content/${server.id}/perms.json`)){
     perms[server.id]={commands:{$perms:{level:-1,perms:{roles:[],users:["i"+server.owner.id]}}}, custcommands:{}, responses:{}, levels:{}};
     perms[server.id].levels[server.owner.id] = -1;
-    if(!fs.existsSync(`./interactivity/content/${server.id}`)) fs.mkdir(`./interactivity/content/${server.id}`);
+    if(!fs.existsSync(`./interactivity/content/${server.id}`)) fs.mkdirSync(`./interactivity/content/${server.id}`);
     fs.open(`./interactivity/content/${server.id}/perms.json`, 'a', (err, file) => {
       if(err) throw err;
       else{
@@ -89,7 +89,6 @@ exports.definePermission = function(server, name){
   return perms[server.id][type][name];
 };
 
-//TODO add owner override
 exports.hasPermission = function(user, name, server){
   //preliminary elimination check
   let p = exports.definePermission(server, name);
@@ -160,14 +159,17 @@ function removePerms(id, arr){
   });
 }
 
+//TODO TURN INTO A PROMISE RATHER THAN A FUNCTION
 exports.allow = function(id, perm){
   return permit(id, "i", perm);
 };
 
+//TODO TURN INTO A PROMISE RATHER THAN A FUNCTION
 exports.disallow = function(id, perm){
   return permit(id, "e", perm);
 };
 
+//TODO TURN INTO A PROMISE RATHER THAN A FUNCTION
 exports.remove = function(id, perm){
   var short = id.match(/\d{18}/)[0];
   if(/<@&\d{18}>/.test(id)){
@@ -179,6 +181,7 @@ exports.remove = function(id, perm){
   }else return false;
 };
 
+//TODO TURN INTO A PROMISE RATHER THAN A FUNCTION
 exports.getRaw = function(perm){
   return JSON.stringify(perm.perms);
 };
@@ -187,9 +190,16 @@ exports.setRaw = function(raw, perm){
   perm.perms = JSON.parse(raw);
 };
 
+//TODO TURN INTO A PROMISE RATHER THAN A FUNCTION
 exports.all = function(server){
   return JSON.stringify(perms[server.id]);
 }
 
-exports.setLevel = function(server, id, level){perms[server.id].levels[id] = level;};
-exports.removeLevel = function(server, id){delete perms[server.id].levels[id];};
+exports.getLevel = function(server, id){
+  if(id.startsWith(cmd.DELIMITER)) return exports.definePermission(server, id).level;
+  else return perms[server.id].levels[id];
+};
+exports.setLevel = function(server, id, level){
+  if(id.startsWith(cmd.DELIMITER)) exports.definePermission(server, id).level = level;
+  else perms[server.id].levels[id] = level;
+};
