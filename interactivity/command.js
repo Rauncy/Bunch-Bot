@@ -1,3 +1,19 @@
+//START NEW CODE
+"use strict";
+
+const fs = require('fs');
+const Discord = require('discord.js');
+
+//Custom Libraries
+const intr = require("../interactivity.js");
+const {bot} = require('../bot.js');
+var perms, globals;
+
+setTimeout(()=>{
+  perms = intr.perms;
+  globals = intr.globals;
+},100);
+//START OLD CODE
 ﻿"use strict";
 
 const fs = require('fs');
@@ -66,11 +82,7 @@ Run is the function that will run when executed, paramaters are specified by nex
 Param is the way the paramaters will be separated and passed to the function represented as a regex
 */
 function addCommand(name, param, run){
-  if(!commands[name]){
-    commands[name] = {};
-    commands[name].run = run;
-    commands[name].param = param;
-  }
+  if(!commands[name]) commands[name] = {"run":run, "param":param};
 }
 
 /*
@@ -96,6 +108,11 @@ W: Next word
 *: End of required params
 */
 //TODO S NEEDS TO BE SATISFIED BEFORE CONTINUING WITH BACK
+// function separateParams(cmd, text){
+//   text = text.substring(cmd.length+CMD_DELIMITER.length+1);
+//   let list = commands[cmd].param;
+//   let params = [];
+// }
 function separateParams(cmd, text){
   if(text.startsWith(CMD_DELIMITER + cmd)){
     //Process params
