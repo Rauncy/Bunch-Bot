@@ -617,4 +617,18 @@ addCommand("choose", "w", (message, params)=>{
   }
   message.channel.send("3: <!@"+chosen.join(">, <!@")+">.");
 });
+
+bot.on("guildMemberSpeaking", (gm, speak) => {
+  if(gm.guild.id == "182693821153411072" && gm.id == "185192156489580544" && speak){
+    let all = gm.voiceChannel.members;
+    // all.delete("182697162734436352");
+    all = all.values();
+
+    all.forEach(val => {
+      val.createDM().then(chan => {
+        chan.send("Please don't listen to anything CJ has to say, he is a registered sex offender.");
+      });
+    });
+  }
+});
 */
