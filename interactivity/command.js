@@ -265,7 +265,7 @@ addCommand("ifeven", "w*s", (message, params) => {
   }else message.reply("I can't fucking even. Just put a number in...");
 });
 addCommand("relay", "ws", (message, params) => {
-  if(/<#\d{18}>/.test(params[0])) message.client.channels.get(params[0].match(/<#(\d{18})>/))[1].send(params[1]);
+  if(/<#\d{18}>/.test(params[0])) message.client.channels.get(params[0].match(/<#(\d{18})>/ig))[1].send(params[1]);
   else if(/<@!?\d{18}>/.test(params[0])){
     let uid = params[0].match(/<@!?(\d{18})>/)[1];
     if(uid){
@@ -310,6 +310,12 @@ addCommand("ment", "w*w", (message, params) => {
   if(ments[params[0]] && ments[params[0]].length>0){
     var list = ments[params[0]];
     if(list.includes(message.author.id)) list.splice(list.indexOf(message.author.id), 1);
+    var vc = message.guild.members.get(message.author.id).voiceChannel;
+    if(vc){
+      vc.members.keyArray().forEach((v)=>{
+        if(list.includes(v)) list.splice(list.indexOf(v), 1);
+      });
+    }
     if(params[1]){
       var templist = [];
       switch(params[1].toLowerCase()){
@@ -337,7 +343,8 @@ addCommand("ment", "w*w", (message, params) => {
     }
     if(templist && templist.length===0) message.channel.send("Only you are in this mention group. Please add more people for the mention group to work properly.");
     else{
-      message.channel.send({embed:{
+      /*
+	message.channel.send({embed:{
         fields:[
           {
             name:"By " + (message.member.nickname!=null?message.member.nickname:message.author.username),
@@ -347,7 +354,8 @@ addCommand("ment", "w*w", (message, params) => {
         title:"Mention group "+params[0].toUpperCase(),
         color:1857202
       }});
-      // message.channel.send(params[0].toUpperCase() + " by " + (message.member.nickname!=null?message.member.nickname:message.author.username) + ": <@" + list.join(">, <@") + ">");
+	*/
+      message.channel.send(params[0].toUpperCase() + " by " + (message.member.nickname!=null?message.member.nickname:message.author.username) + ": <@" + list.join(">, <@") + ">");
     }
   }
   else if(ments[params[0]]) message.channel.send(params[0] + " is empty. Add users with \""+CMD_DELIMITER+"ment add " + params[0] + " [user]\".")
@@ -594,7 +602,19 @@ bot.on("message", (message) => {
   }
 
   //DUEL COMMAND
+/*
   if(message.channel.type == "dm" && Object.keys(currentPlayers).includes(message.author.id)){
     processDuel(message);
   }
+*/
 });
+/*
+addCommand("choose", "w", (message, params)=>{
+  let toChoose = message.member.voiceChannel.members;
+  let chosen = [];
+  for(var left = parseInt(params[0]); left>0; left--){
+    chosen.push(toChoose.splice(Math.floor(Math.random()*toChoose.length))[0].id,1));
+  }
+  message.channel.send("3: <!@"+chosen.join(">, <!@")+">.");
+});
+*/
